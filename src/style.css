@@ -135,3 +135,14 @@
  .removeSet{width:22px;height:21px;font-size:16px}
  .exerciseIcon svg{width:24px;height:24px}
 }
+
+/* Refined movement pictograms: consistent human-scale line illustrations */
+.exerciseIcon{color:#d5e8bd;background:radial-gradient(circle at 45% 25%,#344a34,#1b281e 78%);border-color:#4a6343}
+.exerciseIcon svg{width:31px;height:31px;overflow:visible}
+.libraryrow>.exerciseIcon svg{width:27px;height:27px}
+.exercise-heading .exerciseIcon{width:48px;height:48px;border-radius:14px}
+@media(max-width:600px){
+ .exerciseIcon svg{width:29px;height:29px}
+ .libraryrow>.exerciseIcon svg{width:25px;height:25px}
+ .exercise-heading .exerciseIcon{width:44px;height:44px}
+}
