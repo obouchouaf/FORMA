@@ -4,3 +4,55 @@
 @media(max-width:600px){.main{padding:20px 14px 90px}header{margin-bottom:22px}h1{font-size:23px}.sync{display:none}.hero{padding:25px 22px;min-height:240px}.heroart{width:30%;opacity:.6}.ring{width:115px;height:115px}.ring span{font-size:35px}.hero h2{font-size:35px}.stats{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:28px}.stat{padding:13px;min-height:92px}.stat b{font-size:22px}.stat small{font-size:8px}.sectionhead h2{font-size:19px}.templategrid{grid-template-columns:1fr}.intro{align-items:start;gap:12px;flex-direction:column}.intro h2{font-size:25px}.intro .primary{align-self:stretch}.panel{padding:15px}.libraryrow{gap:5px}.libraryrow>span{display:none}.libraryrow b{font-size:10px}.subtle{padding:7px 4px}.sethead,.setrow{grid-template-columns:25px minmax(0,1fr) minmax(0,1fr) 53px 30px;gap:5px}.setrow input:not([type=checkbox]),.setrow select{padding:9px 5px;font-size:11px}.sethead{font-size:8px}.exercisePanel{padding:13px}.exercisePanel .panelhead h3{font-size:14px}.exercisefoot .secondary{padding:10px;font-size:10px}.finishbar{bottom:6px;padding:10px}.finishbar .primary{padding:11px}.historycard{padding:14px;gap:8px}.historymetrics{gap:9px;font-size:14px}.historymetrics small{display:block;margin-top:3px}.recoverygrid{grid-template-columns:repeat(2,1fr)}.settingsgrid,.formgrid{grid-template-columns:1fr}.actionrow>*{width:100%;text-align:center}.workouttop{gap:10px}.timer{font-size:13px}.formgrid{gap:12px}.modal{padding:17px}.heroart{display:none}.hero{min-height:0}.hero p{max-width:270px}.coach{padding:13px}}
 
 .progresshint{font-size:10px;line-height:1.5;color:#b9d3bd;background:#26382a;border-radius:6px;padding:9px 10px}
+
+/* FORMA 2.0 — premium visual refinement */
+:root{--bg:#0c110e;--panel:#151d18;--line:#29372e;--muted:#91a095;--green:#b4d2b8;--accent:#8eaf94;--white:#f0f4ef;--glow:0 18px 55px #0004}
+body{background:radial-gradient(ellipse at 75% -10%,#203528 0,transparent 38%),#0c110e;color:var(--white)}
+.sidebar{background:rgba(16,23,18,.96);backdrop-filter:blur(18px);border-color:#26342b}
+.brand{padding-bottom:48px}.brand>span:nth-child(2){font-size:19px;letter-spacing:3.5px}
+.nav{transition:background .2s ease,color .2s ease,transform .2s ease}.nav:hover{background:#202c23;color:#e4eee4;transform:translateX(2px)}.nav.chosen{background:linear-gradient(100deg,#2b4030,#202e24);box-shadow:inset 2px 0 #a5c8aa}
+.main{padding-top:40px}.main>header{padding-bottom:18px;border-bottom:1px solid #253128;margin-bottom:28px}
+h1{font-size:29px;letter-spacing:-1px}.eyebrow{color:#91a496;letter-spacing:1.7px}
+.hero{border-radius:20px;background:radial-gradient(circle at 82% 45%,#35533b 0,transparent 27%),linear-gradient(115deg,#1a2b20,#152019 62%,#263a2b);border-color:#3a5140;box-shadow:var(--glow);min-height:285px}
+.hero h2{letter-spacing:-2.4px}.hero p{font-size:14px;max-width:440px;line-height:1.7}.ring{border-color:#78977d;box-shadow:0 0 0 18px #b6d7b50c,0 0 0 38px #b6d7b508,0 0 65px #a4c7a51c}
+.primary{background:linear-gradient(135deg,#c0d9c2,#94b99a);box-shadow:0 5px 18px #a6c9a51c;transition:transform .18s ease,filter .18s ease}.primary:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.secondary,.iconbtn,.templatecard,.panel,.stat,.historycard{transition:border-color .2s ease,background .2s ease,box-shadow .2s ease}
+.panel,.stat,.templatecard,.historycard{border-radius:15px;border-color:#2b3930;background:linear-gradient(145deg,#18221b,#141b16)}
+.panel:hover,.templatecard:hover,.historycard:hover{border-color:#3b5141}
+.stat{min-height:116px;padding:19px 20px}.stat b{font-size:27px;letter-spacing:-.8px}.stat small{color:#9aab9e}
+.sectionhead{margin-top:34px}.sectionhead h2,.intro h2,.workouttitle h2{letter-spacing:-.9px}
+.weeklyPanel{margin:0 0 30px;padding:19px 22px}.weekbars{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:13px;align-items:end;height:116px;padding:18px 4px 0}.weekday{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:end;gap:5px}.bartrack{height:65px;width:min(30px,65%);background:#202b23;border-radius:8px 8px 4px 4px;display:flex;align-items:end;overflow:hidden}.bartrack i{display:block;width:100%;background:linear-gradient(180deg,#b6d5b8,#64876c);border-radius:7px 7px 3px 3px;min-height:3px}.weekday b{font:10px 'DM Mono';color:#c4d9c6;min-height:12px}.weekday span{font:9px 'DM Mono';color:#8b9b8e;text-transform:uppercase}
+.recordgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px}.recordtile{position:relative;min-width:0;padding:14px;background:linear-gradient(145deg,#202e24,#19231c);border:1px solid #34483a;border-radius:11px;display:flex;flex-direction:column;gap:7px}.recordtile>b{font-size:11px;line-height:1.4;min-height:30px}.recordtile>strong{font:700 24px Manrope;letter-spacing:-.7px;color:#c0d9c2}.recordtile>strong small{font:11px 'DM Mono';color:#93a996}.recordtile>span:last-child{font:9px 'DM Mono';color:#91a095}.recordmark{position:absolute;right:10px;top:10px;font:9px 'DM Mono';letter-spacing:1px;color:#b8d4ba;background:#314a36;padding:4px 6px;border-radius:5px}
+.recordsPanel{margin-bottom:18px}
+.activityicon,.templatebadge{background:linear-gradient(145deg,#304735,#25352a);border:1px solid #3a5140}
+.templateRow{border-radius:8px;padding-left:7px;padding-right:7px}.templateRow:hover{background:#202b23}
+.coach{border-radius:13px;background:linear-gradient(110deg,#1b2a20,#172119);border-color:#344a39}
+.workouttitle{max-width:760px}.exercisePanel{border-radius:14px}.setrow input:not([type=checkbox]),.setrow select,.settingsgrid input,.formgrid input,.formgrid select,.panel label input{background:#101712;border-color:#344439}.setrow input:focus,.setrow select:focus,.settingsgrid input:focus,.formgrid input:focus,.formgrid select:focus{outline:2px solid #7fa98755;border-color:#8eaf94}
+.progressbar{height:7px;background:#27352b}.progressbar i{background:linear-gradient(90deg,#789d80,#b6d7ba)}
+.previous,.progresshint{border:1px solid #35483a;background:#1d2b21;border-radius:8px}
+.historycard{padding:20px}.historymetrics{color:#c4d9c6}
+.modal{background:#17221a;border-color:#3a4d3e;border-radius:18px}.toast{box-shadow:var(--glow)}
+button:focus-visible{outline:2px solid #b6d7ba;outline-offset:3px}
+@media(max-width:1000px){.recordgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){
+ .main{padding:18px 13px 100px;margin-left:0}
+ .main>header{padding-bottom:14px;margin-bottom:20px}
+ h1{font-size:24px}
+ .sidebar{inset:auto 0 0 0;width:100%;height:70px;padding:5px 5px calc(5px + env(safe-area-inset-bottom));display:flex;flex-direction:row;align-items:stretch;justify-content:space-around;background:rgba(15,22,17,.97);backdrop-filter:blur(18px);border-right:0;border-top:1px solid #344439;box-shadow:0 -10px 30px #0004}
+ .brand,.navlabel,.sidebottom{display:none}
+ .nav{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;padding:5px 1px;margin:0;border-radius:8px;font-size:8px!important;line-height:1.1;text-align:center;white-space:normal;transform:none!important;color:#a7b5aa}
+ .navdot{width:6px;height:6px;flex:none}
+ .nav.chosen{font-size:8px!important;background:#26372a;box-shadow:inset 0 2px #a5c8aa}
+ .hero{padding:23px 20px;min-height:0;border-radius:16px}
+ .hero h2{font-size:34px}
+ .stats{gap:8px;margin:13px 0 20px}
+ .stat{min-height:96px;padding:13px;border-radius:12px}
+ .stat b{font-size:22px}
+ .weeklyPanel{padding:15px;margin-bottom:24px}
+ .weekbars{gap:6px;height:106px}
+ .bartrack{width:58%;height:57px}
+ .recordgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .recordtile{padding:12px}
+ .sectionhead{margin-top:25px}
+ .panel,.templatecard{border-radius:12px}
+}
