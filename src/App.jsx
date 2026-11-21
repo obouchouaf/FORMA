@@ -36,10 +36,10 @@ function App(){
  const updateProfile=p=>setData(d=>({...d,profile:{...d.profile,...p}}));
  const sessions=data.sessions, active=data.active;
  const weekStart=()=>{let d=new Date();d.setDate(d.getDate()-((d.getDay()+6)%7));return dateKey(d)};
- const thisWeek=sessions.filter(s=>s.date>=weekStart()).length;
+ const thisWeek=sessions.filter(s=>s.date>=weekStart()&&s.date<=today()).length;
  const totalVolume=sessions.reduce((a,s)=>a+s.exercises.reduce((b,e)=>b+e.sets.filter(x=>x.done).reduce((c,x)=>c+(+x.weight||0)*(+x.reps||0),0),0),0);
  const previous=id=>sessions.slice().reverse().flatMap(s=>s.exercises.filter(e=>e.exerciseId===id).map(e=>({date:s.date,sets:e.sets}))).at(0);
- const startWorkout=(templateId)=>{const t=data.templates.find(x=>x.id===templateId);if(!t)return;const feel="Good";const ex=t.ids.map(id=>{let e=data.exercises.find(x=>x.id===id);if(!e)return null;let prev=previous(id);return {exerciseId:id,name:e.name,muscle:e.muscle,rest:e.rest,repsTarget:e.reps,sets:Array.from({length:e.sets},(_,i)=>({weight:prev?.sets?.[i]?.weight||"",reps:prev?.sets?.[i]?.reps||"",done:false,rpe:""})),notes:""}}).filter(Boolean);setData(d=>({...d,active:{id:uid(),templateId,date:today(),startedAt:Date.now(),feel,exercises:ex}}));setPage("Workout");};
+ const startWorkout=(templateId)=>{if(active){setPage("Workout");setToast("You already have a workout in progress. Resume it first.");return}const t=data.templates.find(x=>x.id===templateId);if(!t)return;const feel="Good";const ex=t.ids.map(id=>{let e=data.exercises.find(x=>x.id===id);if(!e)return null;let prev=previous(id);return {exerciseId:id,name:e.name,muscle:e.muscle,rest:e.rest,repsTarget:e.reps,sets:Array.from({length:e.sets},(_,i)=>({weight:prev?.sets?.[i]?.weight||"",reps:prev?.sets?.[i]?.reps||"",done:false,rpe:""})),notes:""}}).filter(Boolean);setData(d=>({...d,active:{id:uid(),templateId,date:today(),startedAt:Date.now(),feel,exercises:ex}}));setPage("Workout");};
  const finish=()=>{if(!active)return;let duration=Math.round((Date.now()-active.startedAt)/60000);let s={...active,endedAt:Date.now(),duration};setData(d=>({...d,sessions:[...d.sessions,s],active:null}));setModal("");setToast("Workout saved to your history");};
  const patchSet=(ei,si,patch)=>setData(d=>({...d,active:{...d.active,exercises:d.active.exercises.map((e,i)=>i!==ei?e:{...e,sets:e.sets.map((s,j)=>j!==si?s:{...s,...patch})})}}));
  const addExercise=()=>{let name=window.prompt("Exercise name");if(!name?.trim())return;let e={id:uid(),name:name.trim(),muscle:"Other",equipment:"",sets:3,reps:"8–12",rest:90,notes:""};setData(d=>({...d,exercises:[...d.exercises,e]}));setToast("Exercise added")};
@@ -77,34 +77,34 @@ function ExerciseIcon({name="",muscle=""}){
  const s=(name+" "+muscle).toLowerCase();
  let kind="dumbbell";
  if(/lat pulldown|pulldown/.test(s))kind="pulldown";
- else if(/seated cable row|cable row|row/.test(s))kind="row";
+ else if(/seated cable row|cable row|\brow\b/.test(s))kind="row";
  else if(/face pull/.test(s))kind="facepull";
  else if(/cable chest fly|chest fly|cable fly/.test(s))kind="fly";
  else if(/smith|bench press|chest press|incline press/.test(s))kind="bench";
  else if(/lateral raise|shoulder raise/.test(s))kind="raise";
- else if(/biceps curl|dumbbell curl|curl/.test(s))kind="curl";
+ else if(/biceps curl|dumbbell curl|\bcurl\b/.test(s))kind="curl";
  else if(/triceps pushdown|pushdown|overhead extension/.test(s))kind="pushdown";
  else if(/leg press|squat/.test(s))kind="legpress";
  else if(/hamstring curl|leg curl/.test(s))kind="legcurl";
  else if(/calf/.test(s))kind="calf";
  else if(/hip abductor|adductor|glute/.test(s))kind="hip";
  else if(/shoulder press/.test(s))kind="shoulderpress";
- const common={fill:"none",stroke:"currentColor",strokeWidth:"1.8",strokeLinecap:"round",strokeLinejoin:"round"};
- return <span className="exerciseIcon" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false" {...common}>
- {kind==="bench"&&<><path d="M7 31h34M13 31l-3 7m28-7 3 7M10 19h28M14 14v10m20-10v10M18 19v-5h12v5"/><path d="M5 14v10m3-12v14m32-14v14m3-12v10"/></>}
- {kind==="fly"&&<><path d="M24 8v7M24 15l-9 7-7 9m16-16 9 7 7 9M8 31l-3 3m35-3 3 3M24 15v20M17 35h14"/><circle cx="24" cy="8" r="2.5"/></>}
- {kind==="pulldown"&&<><path d="M9 7v34M39 7v34M9 10h30M15 10v5m18-5v5M14 15h20M24 15v11m-7-2 7 2 7-2M16 41h16M14 34h20"/></>}
- {kind==="row"&&<><path d="M9 7v34M39 7v34M9 10h30M14 16h20M24 16v9m0 0-8 7m8-7 8 7M11 34h26M16 34v7m16-7v7M24 25h-8"/></>}
- {kind==="facepull"&&<><path d="M8 7v34M8 10h13M21 10l8 7 8 7M21 10l8 7-2 8m10-1 3 3m-3-3-4 2M8 37h32"/><circle cx="29" cy="17" r="2"/></>}
- {kind==="raise"&&<><path d="M24 14v23m0-15-12-8m12 8 12-8M8 9l4-3 4 3m20 0 4-3 4 3M16 37h16"/><circle cx="24" cy="8" r="3"/></>}
- {kind==="curl"&&<><path d="M24 11v26M14 16v16m20-16v16M10 17h8m12 0h8M10 31h8m12 0h8"/><path d="M18 21l6-5 6 5"/></>}
- {kind==="pushdown"&&<><path d="M12 7v34M36 7v34M12 10h24M24 10v12m-7 0h14m-10 0v9m6-9v9M17 31h14M19 31v6m10-6v6"/></>}
- {kind==="legpress"&&<><path d="M8 8l7 32M8 8h31M15 40h25M24 15l9 7-4 10M18 17l-5 4m20 1 6-5M18 32h15"/><circle cx="20" cy="14" r="3"/></>}
- {kind==="legcurl"&&<><path d="M8 13h25v7H8zM12 20v16m18-16v8m0 0 8 7m-8-7-7 7M8 36h31M14 13V8h16v5"/></>}
- {kind==="calf"&&<><path d="M15 8v24h12l5 7H12M32 8v24M8 39h32M15 13h17"/></>}
- {kind==="hip"&&<><path d="M24 8v32M12 15l12 8 12-8M12 15v18m24-18v18M12 33h24M18 23l-6 10m18-10 6 10"/><circle cx="24" cy="8" r="3"/></>}
- {kind==="shoulderpress"&&<><path d="M24 15v22M11 12h26M14 7v10m20-10v10M8 7h32M17 24l7-7 7 7"/></>}
- {kind==="dumbbell"&&<><path d="M13 24h22M8 17v14m5-18v22m22-22v22m5-18v14"/></>}
+ const stroke={fill:"none",stroke:"currentColor",strokeWidth:2.1,strokeLinecap:"round",strokeLinejoin:"round"};
+ return <span className="exerciseIcon" aria-hidden="true"><svg viewBox="0 0 56 56" focusable="false" {...stroke}>
+ {kind==="bench"&&<><path d="M7 38h42M13 38l-3 7m33-7 3 7M11 19h34M15 14v10m26-10v10M8 12v14m40-14v14"/><circle cx="25" cy="26" r="4"/><path d="M25 30l7 5 8 0M25 31l-7 4M32 35l-2 3"/></>}
+ {kind==="fly"&&<><circle cx="28" cy="12" r="4"/><path d="M28 16v15m0-10-13-5-7 6m20-1 13-5 7 6M15 16l-4-3m30 3 4-3M28 31l-8 14m8-14 8 14M8 24l-3 3m43-3 3 3"/></>}
+ {kind==="pulldown"&&<><path d="M8 6v44M48 6v44M8 9h40M16 9v7m24-7v7M14 16h28"/><circle cx="28" cy="23" r="4"/><path d="M28 27v10m0-8-9-7m9 7 9-7m-9 15-7 9m7-9 7 9M28 8v9"/></>}
+ {kind==="row"&&<><path d="M8 7v43M48 7v43M8 10h40M12 43h32M17 43v7m22-7v7"/><circle cx="24" cy="20" r="4"/><path d="M24 24l7 8 8 0m-15-8-7 7m14 1-2 11m2-11 8 11M39 32h8M47 32l-4-3m4 3-4 3"/></>}
+ {kind==="facepull"&&<><path d="M8 7v43M8 10h14M22 10l12 8 8 8"/><circle cx="28" cy="17" r="4"/><path d="M28 21l-2 13m0-8-8 7m8-7 8 4m-8 6-7 10m7-10 8 10M42 26l5 5m-5-5-1 7"/></>}
+ {kind==="raise"&&<><circle cx="28" cy="12" r="4"/><path d="M28 16v17m0-11-14-6-6 4m20 2 14-6 6 4M14 16l-4-4m36 4 4-4M28 33l-8 14m8-14 8 14M8 14h-3m46 0h-3"/></>}
+ {kind==="curl"&&<><circle cx="28" cy="10" r="4"/><path d="M28 14v20m0-14-10 7-2 10m12-17 10 7 2 10m-12-3-7 14m7-14 7 14M18 25l-5-7m5 7 5 5m15-5 5-7m-5 7-5 5M9 15h7m24 0h7"/></>}
+ {kind==="pushdown"&&<><path d="M9 6v44M47 6v44M9 9h38M28 9v12"/><circle cx="28" cy="24" r="4"/><path d="M28 28v9m0-7-8-3m8 3 8-3m-8 10-7 10m7-10 7 10M20 30v9m16-9v9"/></>}
+ {kind==="legpress"&&<><path d="M8 7l10 40M8 7h39M18 47h30M35 10l9 9-6 8"/><circle cx="24" cy="20" r="4"/><path d="M24 24l7 8 8 0m-15-8-6 7m21 1 4-12M30 32l-4 12m4-12 10 12M40 20l6-5"/></>}
+ {kind==="legcurl"&&<><path d="M8 14h36v8H8zM12 22v20m28-20v10m0 0 7 8m-7-8-9 8M8 42h40M16 14V8h20v6"/><circle cx="22" cy="10" r="2"/></>}
+ {kind==="calf"&&<><path d="M10 45h36M14 40h28M21 9v19l7 6 7-6V9M21 28l-5 11m19-11 5 11M18 45v-5m20 5v-5"/><circle cx="28" cy="7" r="3"/></>}
+ {kind==="hip"&&<><path d="M10 18h36v26H10zM17 44v6m22-6v6M28 16v17m-11-9 11 8 11-8M17 32l-5 7m27-7 5 7"/><circle cx="28" cy="9" r="4"/><path d="M18 33l-4 7m24-7 4 7"/></>}
+ {kind==="shoulderpress"&&<><path d="M9 11h38M13 7v9m30-9v9M8 5v12m40-12v12"/><circle cx="28" cy="23" r="4"/><path d="M28 27v12m0-8-9-6m9 6 9-6m-9 8-7 10m7-10 7 10M28 12v6"/></>}
+ {kind==="dumbbell"&&<><circle cx="28" cy="10" r="4"/><path d="M28 14v19m0-13-10 7-3 9m13-16 10 7 3 9m-13-3-7 13m7-13 7 13M5 18v14m5-18v22m36-22v22m5-18v14M10 25h36"/></>}
  </svg></span>
 }
 function Trend({data}){if(data.length<2)return <div className="empty compact"><span>⌁</span><p>Log at least two body-weight entries to see a trend.</p></div>;let min=Math.min(...data.map(x=>x.value))-1,max=Math.max(...data.map(x=>x.value))+1;let pts=data.map((x,i)=>`${i/(data.length-1)*100},${100-(x.value-min)/(max-min)*100}`).join(" ");return <div className="trend"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points={pts} fill="none" stroke="#8eb69a" strokeWidth="2.5" vectorEffect="non-scaling-stroke"/>{data.map((x,i)=><circle cx={i/(data.length-1)*100} cy={100-(x.value-min)/(max-min)*100} r="1.7" fill="#8eb69a"/>)}</svg><div className="trendlabels"><span>{data[0].label}</span><b>{data.at(-1).value} kg</b><span>{data.at(-1).label}</span></div></div>}
