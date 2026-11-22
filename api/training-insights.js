@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") { res.setHeader("Allow", "POST"); return res.status(405).json({ error: "Method not allowed." }); }
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return res.status(503).json({ error: "AI coach is not connected yet. Add OPENAI_API_KEY to Vercel Environment Variables and redeploy." });
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return res.status(503).json({ error: "AI coach is not connected yet. Add GEMINI_API_KEY to Vercel Environment Variables and redeploy." });
   try {
     const d = req.body || {};
     const safe = {
@@ -22,31 +22,26 @@ export default async function handler(req, res) {
       "Identify which logged exercises may have room for more reps/effort and which may need recovery. Avoid claiming muscle imbalances from limited data.",
       "Nutrition and recovery logging are incomplete signals; never infer actual calorie intake, sleep or recovery when not logged.",
       "If no workouts were logged in this seven-day period, say so neutrally, compare prior week if possible, and give a realistic next step rather than pretending performance was assessed.",
-      "Return a concise weekly review. headline is a short verdict, summary 2-3 sentences, wins 1-3 items, opportunities 1-3 items, nextWeekFocus one clear action, caveat one brief limitation.",
+      "Return ONLY a JSON object with keys: headline (string), summary (string), wins (array of strings), opportunities (array of strings), nextWeekFocus (string), caveat (string).",
+      "headline is a short verdict, summary 2-3 sentences, wins 1-3 items, opportunities 1-3 items, nextWeekFocus one clear action, caveat one brief limitation.",
       "DATA (JSON): " + JSON.stringify(safe)
     ].join("\n");
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method:"POST", headers:{"Authorization":"Bearer "+apiKey,"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:"gpt-4o-mini",
-        input:[{role:"user",content:[{type:"input_text",text:prompt}]}],
-        text:{format:{type:"json_schema",name:"weekly_training_review",strict:true,schema:{
-          type:"object",additionalProperties:false,
-          properties:{
-            headline:{type:"string"},summary:{type:"string"},
-            wins:{type:"array",items:{type:"string"}},
-            opportunities:{type:"array",items:{type:"string"}},
-            nextWeekFocus:{type:"string"},caveat:{type:"string"}
-          },
-          required:["headline","summary","wins","opportunities","nextWeekFocus","caveat"]
-        }}},
-        max_output_tokens:700
+    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent", {
+      method: "POST",
+      headers: { "x-goog-api-key": apiKey, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: "application/json", temperature: 0.35, maxOutputTokens: 900 }
       })
     });
-    const payload=await response.json();
-    if(!response.ok)return res.status(502).json({error:payload?.error?.message||"The AI coach could not complete the review."});
-    const output=(payload.output||[]).flatMap(x=>x.content||[]).filter(x=>x.type==="output_text").map(x=>x.text).join("\n");
-    if(!output)throw new Error("The AI coach returned no review.");
-    return res.status(200).json(JSON.parse(output));
-  } catch(e) { return res.status(500).json({error:e.message||"Weekly review failed. Please try again."}); }
+    const payload = await response.json();
+    if (!response.ok) return res.status(response.status === 429 ? 429 : 502).json({ error: payload?.error?.message || "The AI coach could not complete the review." });
+    const output = (payload.candidates?.[0]?.content?.parts || []).map(part => part.text || "").join("\n").trim();
+    if (!output) throw new Error("The AI coach returned no review.");
+    const result = JSON.parse(output.replace(/^\`\`\`json\s*/i, "").replace(/\`\`\`$/, ""));
+    if (!result.headline || !result.summary || !Array.isArray(result.wins) || !Array.isArray(result.opportunities) || !result.nextWeekFocus || !result.caveat) {
+      throw new Error("The AI coach returned an incomplete review.");
+    }
+    return res.status(200).json(result);
+  } catch(e) { return res.status(500).json({ error: e.message || "Weekly review failed. Please try again." }); }
 }
