@@ -33,18 +33,20 @@ export default async function handler(req, res) {
       "User description: " + (description.trim() || "No text description; identify the food from the image.")
     ].join("\n");
 
-    const parts = [{ text: prompt }];
+    const input = [{ type: "text", text: prompt }];
     if (image) {
       const match = image.match(/^data:(image\/(?:jpeg|jpg|png|webp));base64,(.+)$/);
-      parts.push({ inlineData: { mimeType: match[1], data: match[2] } });
+      input.push({ type: "image", data: match[2], mime_type: match[1] });
     }
 
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent", {
+    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
       method: "POST",
       headers: { "x-goog-api-key": apiKey, "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [{ role: "user", parts }],
-        generationConfig: { responseMimeType: "application/json", temperature: 0.2, maxOutputTokens: 600 }
+        model: "gemini-3.5-flash-lite",
+        input,
+        store: false,
+        response_format: { type: "text", mime_type: "application/json" }
       })
     });
 
@@ -53,7 +55,15 @@ export default async function handler(req, res) {
       const message = payload?.error?.message || "The nutrition service could not estimate this meal.";
       return res.status(response.status === 429 ? 429 : 502).json({ error: message });
     }
-    const outputText = (payload.candidates?.[0]?.content?.parts || []).map(part => part.text || "").join("\n").trim();
+    if (payload.status && payload.status !== "completed") {
+      throw new Error(payload.error?.message || "The nutrition service did not complete the estimate.");
+    }
+    const outputText = payload.output_text || (payload.steps || [])
+      .filter(step => step.type === "model_output")
+      .flatMap(step => step.content || [])
+      .filter(part => part.type === "text")
+      .map(part => part.text || "")
+      .join("\n").trim();
     if (!outputText) throw new Error("The nutrition service returned no estimate.");
     const result = JSON.parse(outputText.replace(/^\`\`\`json\s*/i, "").replace(/\`\`\`$/, ""));
     for (const key of ["calories", "protein", "carbs", "fat"]) {
