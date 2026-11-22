@@ -26,17 +26,27 @@ export default async function handler(req, res) {
       "headline is a short verdict, summary 2-3 sentences, wins 1-3 items, opportunities 1-3 items, nextWeekFocus one clear action, caveat one brief limitation.",
       "DATA (JSON): " + JSON.stringify(safe)
     ].join("\n");
-    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent", {
+    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
       method: "POST",
       headers: { "x-goog-api-key": apiKey, "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: "application/json", temperature: 0.35, maxOutputTokens: 900 }
+        model: "gemini-3.5-flash-lite",
+        input: prompt,
+        store: false,
+        response_format: { type: "text", mime_type: "application/json" }
       })
     });
     const payload = await response.json();
     if (!response.ok) return res.status(response.status === 429 ? 429 : 502).json({ error: payload?.error?.message || "The AI coach could not complete the review." });
-    const output = (payload.candidates?.[0]?.content?.parts || []).map(part => part.text || "").join("\n").trim();
+    if (payload.status && payload.status !== "completed") {
+      throw new Error(payload.error?.message || "The AI coach did not complete the review.");
+    }
+    const output = payload.output_text || (payload.steps || [])
+      .filter(step => step.type === "model_output")
+      .flatMap(step => step.content || [])
+      .filter(part => part.type === "text")
+      .map(part => part.text || "")
+      .join("\n").trim();
     if (!output) throw new Error("The AI coach returned no review.");
     const result = JSON.parse(output.replace(/^\`\`\`json\s*/i, "").replace(/\`\`\`$/, ""));
     if (!result.headline || !result.summary || !Array.isArray(result.wins) || !Array.isArray(result.opportunities) || !result.nextWeekFocus || !result.caveat) {
