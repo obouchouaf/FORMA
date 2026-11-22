@@ -311,3 +311,38 @@
 .coachAnswer{margin-top:16px;padding:16px;border:1px solid #40553f;border-radius:12px;background:#19271d}
 .coachAnswer p{font-size:13px;line-height:1.7;color:#d3dfd0;white-space:pre-wrap;margin:9px 0 0}
 @media(max-width:600px){.coachChat{padding:15px}.coachSuggestions{gap:6px}.suggestion{font-size:9px;padding:8px 9px}.coachAsk{width:100%}}
+
+
+/* Focused, editorial workout flow */
+.exercisePanel{overflow:hidden;transition:border-color .18s ease}
+.exercisePanelHead{margin:0!important;padding:15px 17px!important;align-items:center}
+.exerciseToggle{display:flex;align-items:center;justify-content:space-between;gap:16px;flex:1;min-width:0;text-align:left;background:transparent;border:0;color:inherit;padding:0;cursor:pointer}
+.exerciseToggle .exercise-heading{min-width:0}
+.exerciseToggle h3{margin:2px 0 0;font-size:16px;letter-spacing:-.35px}
+.exerciseSubline{display:block;color:var(--muted);font-size:10px;margin-top:5px}
+.expandMark{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;border-radius:50%;background:#28392b;color:#d5e5cc;font-size:18px}
+.exerciseDetails{padding:0 17px 16px;border-top:1px solid var(--line)}
+.exerciseDetailTop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0 2px;color:var(--muted);font-size:11px}
+.exerciseDetails .previous{margin:10px 0 8px}
+.exerciseDetails .progresshint{margin:8px 0 14px}
+.exerciseLibraryDetails{padding:0 17px 14px}
+.exerciseLibraryDetails>summary{display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;list-style:none;padding:17px 0}
+.exerciseLibraryDetails>summary::-webkit-details-marker{display:none}
+.exerciseLibraryDetails>summary b,.exerciseLibraryDetails>summary small{display:block}
+.exerciseLibraryDetails>summary b{font-size:14px}
+.exerciseLibraryDetails>summary small{font-size:10px;color:var(--muted);margin-top:4px}
+.exerciseLibraryDetails[open]>summary{border-bottom:1px solid var(--line);margin-bottom:14px}
+.exerciseLibraryDetails .panelhead{padding:0!important}
+.exerciseLibraryDetails .libraryrow{padding-left:0;padding-right:0}
+.templatecard{transition:transform .18s ease,border-color .18s ease}
+.templatecard:hover{transform:translateY(-2px);border-color:#607b56}
+.templatecard .expreview{min-height:38px;line-height:1.6}
+.workouttitle h2{font-size:clamp(26px,4vw,38px);letter-spacing:-1.1px}
+@media(max-width:600px){
+ .exercisePanelHead{padding:13px 12px!important}
+ .exerciseDetails{padding:0 12px 13px}
+ .exerciseToggle h3{font-size:14px}
+ .exerciseToggle .exercise-heading{gap:9px}
+ .exerciseDetails .sethead{font-size:8px}
+ .exerciseLibraryDetails{padding:0 12px 12px}
+}
