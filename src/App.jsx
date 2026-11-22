@@ -1,6 +1,20 @@
 import React, {useEffect,useMemo,useState} from "react";
 import "./style.css";
 
+async function compressMealPhoto(file){
+ const read=()=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error("Could not read that photo."));reader.readAsDataURL(file)});
+ const dataUrl=await read();
+ const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error("Could not open that photo."));img.src=dataUrl});
+ const scale=Math.min(1,1600/Math.max(image.naturalWidth,image.naturalHeight));
+ const canvas=document.createElement("canvas");
+ canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+ const context=canvas.getContext("2d");if(!context)throw new Error("Photo compression is not supported on this device.");
+ context.drawImage(image,0,0,canvas.width,canvas.height);
+ let quality=0.84,result=canvas.toDataURL("image/jpeg",quality);
+ while(result.length>3_400_000&&quality>0.5){quality-=0.08;result=canvas.toDataURL("image/jpeg",quality)}
+ if(result.length>3_400_000)throw new Error("This photo is still too large. Please choose a smaller image.");
+ return result;
+}
 const dateKey=value=>{if(typeof value==="string"&&/^\\d{4}-\\d{2}-\\d{2}$/.test(value))return value;const d=value instanceof Date?value:new Date(value);if(!(d instanceof Date)||Number.isNaN(d.getTime()))return "";return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
 const today=()=>dateKey(new Date());
 const uid=()=>Math.random().toString(36).slice(2,10);
@@ -209,7 +223,7 @@ function Modal({name,close,data,setData,updateProfile,setToast}){
  {name==="meal"&&<div className="mealForm">
  <p className="muted">Just describe your meal in your own words. Add portions if you know them. Or take a photo — FORMA will identify the food and estimate its nutrition.</p>
  <label>Describe your meal<textarea rows="3" placeholder="e.g. A big plate of chicken tagine with potatoes, olives and some bread. About one chicken thigh." value={form.name||""} onChange={e=>{change("name",e.target.value);setEstimate(null)}}/></label>
- <label className="mealPhoto"><span>PHOTO (OPTIONAL)</span><input type="file" accept="image/*" capture="environment" onChange={e=>{const file=e.target.files?.[0];if(!file)return;if(file.size>2.8*1024*1024){setError("Choose an image smaller than 2.8 MB for a reliable upload.");return}const reader=new FileReader();reader.onload=()=>{setPhoto(reader.result);setPhotoName(file.name);setEstimate(null);setError("")};reader.readAsDataURL(file)}}/>{photoName&&<small>Attached: {photoName} <button className="subtle danger" type="button" onClick={()=>{setPhoto("");setPhotoName("");setEstimate(null)}}>Remove</button></small>}</label>
+ <label className="mealPhoto"><span>PHOTO (OPTIONAL)</span><input type="file" accept="image/*" capture="environment" onChange={async e=>{const file=e.target.files?.[0];if(!file)return;setError("");try{const compressed=await compressMealPhoto(file);setPhoto(compressed);setPhotoName(file.name);setEstimate(null)}catch(error){setError(error.message||"Could not prepare that photo.")}finally{e.target.value=""}}}/>{photoName&&<small>Attached: {photoName} · optimized for upload <button className="subtle danger" type="button" onClick={()=>{setPhoto("");setPhotoName("");setEstimate(null)}}>Remove</button></small>}</label>
  <button className="primary analyzeMeal" disabled={analyzing||(!form.name?.trim()&&!photo)} onClick={analyze}>{analyzing?"Analyzing your meal…":"✦ Estimate calories & macros"}</button>
  {error&&<p className="mealError">{error}</p>}
  {estimate&&<div className="mealEstimate"><div className="mealEstimateHead"><span className="eyebrow green">ESTIMATED NUTRITION</span><span className="pill">{estimate.confidence||"Estimate"}</span></div><h4>{estimate.mealName}</h4><div className="mealCalories"><strong>{fmt(estimate.calories)}</strong><span>kcal</span></div><div className="macroGrid"><div><b>{fmt(estimate.protein)}g</b><small>PROTEIN</small></div><div><b>{fmt(estimate.carbs)}g</b><small>CARBS</small></div><div><b>{fmt(estimate.fat)}g</b><small>FAT</small></div></div><p>{estimate.ingredients}</p>{estimate.assumptions&&<small className="muted">Assumptions: {estimate.assumptions}</small>}<small className="muted">AI estimate only. Portion size, hidden oil and recipe variations can change the actual values.</small></div>}
