@@ -8,6 +8,12 @@ export default async function handler(req, res) {
       period: d.period, workouts: Number(d.workouts)||0, previousWorkouts: Number(d.previousWorkouts)||0,
       sets: Number(d.sets)||0, volume: Number(d.volume)||0, previousVolume: Number(d.previousVolume)||0,
       averageEffort: Number.isFinite(d.averageEffort) ? d.averageEffort : null,
+      history: {
+        totalWorkouts: Number(d.history?.totalWorkouts)||0,
+        workoutsLast30Days: Number(d.history?.workoutsLast30Days)||0,
+        workoutsLast90Days: Number(d.history?.workoutsLast90Days)||0,
+        lastWorkout: d.history?.lastWorkout ? String(d.history.lastWorkout).slice(0,10) : null
+      },
       meals: Array.isArray(d.meals) ? d.meals.slice(0,35).map(m=>({
         date:String(m.date||"").slice(0,10), name:String(m.name||"").slice(0,100),
         calories:Number(m.calories)||0, protein:Number(m.protein)||0,
@@ -27,7 +33,8 @@ export default async function handler(req, res) {
     const prompt = [
       "You are FORMA, a careful and encouraging strength-training coach. Review this user's last-seven-days training log.",
       "Be specific, practical, supportive and honest. Do not invent missing data or shame the user for a low-volume week.",
-      "Compare workouts and volume with the previous seven days only where meaningful. Distinguish a quiet week from poor performance.",
+      "Use both the current seven-day data and the long-term history summary when available. Previous-week comparisons are optional context, never a requirement. If there is no previous week, analyze current data and longer-term consistency instead.",
+      "If there are no recent workouts, do not block the review. Use any available longer-term training, meal or recovery data, explain what is missing, and give one useful next step.",
       "Use RPE 6-7 as relatively easy, 8 as challenging/productive, 9-10 as very demanding. Do not tell them to increase weight just because effort is low: first suggest a controlled extra rep within their target range; increase load only when top of rep range is achieved with clean technique and manageable effort.",
       "Identify which logged exercises may have room for more reps/effort and which may need recovery. Avoid claiming muscle imbalances from limited data.",
       "Review meal logs as estimates. Summarize logged calories and macros only when there are enough entries; unlogged meals mean the day is incomplete. Never infer a calorie deficit from a single day.",
