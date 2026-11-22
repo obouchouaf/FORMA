@@ -204,3 +204,26 @@
 .historymetrics{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .historymetrics .danger{font-size:10px;padding:7px 9px}
 @media(max-width:600px){.mealModal{max-height:92dvh}.mealEstimate{padding:13px}.historymetrics{gap:8px}}
+
+/* Weekly AI coach experience */
+.insightPanel{overflow:hidden}
+.insightPlaceholder{text-align:center;padding:34px 18px 30px;max-width:620px;margin:auto}
+.insightSpark{display:grid;place-items:center;width:54px;height:54px;margin:0 auto 15px;border-radius:17px;background:#253a2a;color:#c7f36b;font-size:25px}
+.insightPlaceholder h3{font-size:19px;margin:0 0 9px}
+.insightPlaceholder p{max-width:470px;margin:0 auto 18px;color:var(--muted);font-size:13px;line-height:1.65}
+.aiReview{padding:8px 0}
+.reviewVerdict{padding:20px;border-radius:14px;background:linear-gradient(135deg,#1b3022,#151e18);border:1px solid #354c38}
+.reviewVerdict h3{font-size:23px;letter-spacing:-.6px;margin:9px 0}
+.reviewVerdict p{font-size:13px;line-height:1.65;color:#c5d2c3;margin:0}
+.reviewGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.reviewGrid>div{padding:15px;border:1px solid var(--line);border-radius:12px}
+.reviewGrid p{font-size:12px;line-height:1.55;color:#c5d2c3;margin:11px 0 0}
+.nextFocus{padding:15px 17px;border-left:3px solid #c7f36b;background:#1c281e;border-radius:0 11px 11px 0;margin:12px 0}
+.nextFocus p{font-size:13px;line-height:1.6;margin:8px 0 0}
+.insightExercise{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+.insightExercise:last-child{border-bottom:0}
+.insightExercise b,.insightExercise small{display:block}
+.insightExercise b{font-size:12px}
+.insightExercise small{font-size:10px;color:var(--muted);margin-top:4px}
+.insightExercise>span{font-size:11px;text-align:right;color:#c5d2c3}
+@media(max-width:600px){.reviewGrid{grid-template-columns:1fr}.reviewVerdict{padding:16px}.reviewVerdict h3{font-size:20px}.insightExercise{align-items:flex-start}.insightExercise>span{max-width:45%}}
