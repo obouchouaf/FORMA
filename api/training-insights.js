@@ -8,7 +8,17 @@ export default async function handler(req, res) {
       period: d.period, workouts: Number(d.workouts)||0, previousWorkouts: Number(d.previousWorkouts)||0,
       sets: Number(d.sets)||0, volume: Number(d.volume)||0, previousVolume: Number(d.previousVolume)||0,
       averageEffort: Number.isFinite(d.averageEffort) ? d.averageEffort : null,
-      mealDays: Number(d.mealDays)||0, recoveryEntries: Number(d.recoveryEntries)||0,
+      meals: Array.isArray(d.meals) ? d.meals.slice(0,35).map(m=>({
+        date:String(m.date||"").slice(0,10), name:String(m.name||"").slice(0,100),
+        calories:Number(m.calories)||0, protein:Number(m.protein)||0,
+        carbs:Number(m.carbs)||0, fat:Number(m.fat)||0,
+        assumptions:String(m.assumptions||"").slice(0,180)
+      })) : [],
+      recovery: Array.isArray(d.recovery) ? d.recovery.slice(0,14).map(r=>({
+        date:String(r.date||"").slice(0,10), sleep:Number(r.sleep)||null,
+        energy:String(r.energy||"").slice(0,30), soreness:String(r.soreness||"").slice(0,30),
+        recovery:String(r.recovery||"").slice(0,30), rest:String(r.rest||"").slice(0,10)
+      })) : [],
       exercises: Array.isArray(d.exercises) ? d.exercises.slice(0,35).map(e=>({
         name:String(e.name||"").slice(0,100), sets:Number(e.sets)||0, reps:Number(e.reps)||0,
         averageRpe:Number.isFinite(e.averageRpe)?e.averageRpe:null, topWeight:Number.isFinite(e.topWeight)?e.topWeight:null
@@ -20,10 +30,14 @@ export default async function handler(req, res) {
       "Compare workouts and volume with the previous seven days only where meaningful. Distinguish a quiet week from poor performance.",
       "Use RPE 6-7 as relatively easy, 8 as challenging/productive, 9-10 as very demanding. Do not tell them to increase weight just because effort is low: first suggest a controlled extra rep within their target range; increase load only when top of rep range is achieved with clean technique and manageable effort.",
       "Identify which logged exercises may have room for more reps/effort and which may need recovery. Avoid claiming muscle imbalances from limited data.",
-      "Nutrition and recovery logging are incomplete signals; never infer actual calorie intake, sleep or recovery when not logged.",
+      "Review the supplied meal logs as estimates: summarize logged calorie and macro patterns only when there are enough entries, and explicitly say that unlogged meals mean the day is incomplete. Never treat logged calories as exact intake or infer a calorie deficit from a single day.
+      Use the supplied recovery entries only for recorded sleep, energy, soreness and self-reported recovery. Do not invent missing values. If there are few entries, say the signal is limited.
+      If meal logs show consistently low protein relative to training needs, suggest practical protein additions without prescribing a rigid diet. Avoid aggressive calorie restriction.
+      Nutrition and recovery logging are incomplete signals; never infer actual calorie intake, sleep or recovery when not logged.",
       "If no workouts were logged in this seven-day period, say so neutrally, compare prior week if possible, and give a realistic next step rather than pretending performance was assessed.",
       "Return ONLY a JSON object with keys: headline (string), summary (string), wins (array of strings), opportunities (array of strings), nextWeekFocus (string), caveat (string).",
       "headline is a short verdict, summary 2-3 sentences, wins 1-3 items, opportunities 1-3 items, nextWeekFocus one clear action, caveat one brief limitation.",
+      "Include a nutrition or recovery observation only when the supplied entries support it. Clearly distinguish logged data from estimates.",
       "DATA (JSON): " + JSON.stringify(safe)
     ].join("\n");
     const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
