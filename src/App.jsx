@@ -107,6 +107,40 @@ function WeeklyActivity({sessions}){const days=Array.from({length:7},(_,i)=>{con
 function Empty({title,body,action,click}){return <div className="empty"><span>✳</span><h3>{title}</h3><p>{body}</p>{action&&<button className="secondary" onClick={click}>{action} ↗</button>}</div>}
 function Workout({active,data,patchSet,setData,finish,onBack}) {
  const [tick,setTick]=useState(Date.now()),[rest,setRest]=useState(null),[picker,setPicker]=useState(null),[guide,setGuide]=useState(null),[expandedExerciseId,setExpandedExerciseId]=useState(active.exercises[0]?.exerciseId||"");
+ const [voiceRecording,setVoiceRecording]=useState(false),[voiceBusy,setVoiceBusy]=useState(false),[voiceMessage,setVoiceMessage]=useState("");
+ const voiceRecorder=useRef(null),voiceChunks=useRef([]);
+ const startVoiceLog=async()=>{
+  try{
+   if(!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==="undefined")throw new Error("Voice recording is not supported in this browser. Try Safari's dictation from the keyboard instead.");
+   const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+   const mime=["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg"].find(t=>MediaRecorder.isTypeSupported(t))||"";
+   const recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);voiceRecorder.current=recorder;voiceChunks.current=[];
+   recorder.ondataavailable=e=>{if(e.data.size)voiceChunks.current.push(e.data)};
+   recorder.onstop=async()=>{
+    stream.getTracks().forEach(t=>t.stop());setVoiceRecording(false);setVoiceBusy(true);setVoiceMessage("Understanding your set…");
+    try{
+     const blob=new Blob(voiceChunks.current,{type:recorder.mimeType||"audio/mp4"});
+     const audio=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error("Could not read the recording."));reader.readAsDataURL(blob)});
+     const focused=active.exercises.find(e=>e.exerciseId===expandedExerciseId)||active.exercises.find(e=>e.sets.some(s=>!s.done));
+     const nextSet=focused?Math.max(1,focused.sets.findIndex(s=>!s.done)+1):1;
+     const response=await fetch("/api/voice-log",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"workout",audio,activeExercise:focused?.name||"",nextSet,exercises:active.exercises.map(e=>({name:e.name,nextSet:Math.max(1,e.sets.findIndex(s=>!s.done)+1)}))})});
+     const result=await response.json();if(!response.ok)throw new Error(result.error||"Could not understand that set.");
+     let target=active.exercises.find(e=>e.name.toLowerCase()===String(result.exerciseName||focused?.name||"").toLowerCase())||focused;
+     if(!target||result.type!=="workout_set")throw new Error("I couldn't match that note to an exercise. Try saying the exercise name, weight and reps.");
+     const ei=active.exercises.findIndex(e=>e.exerciseId===target.exerciseId);
+     const si=result.setNumber?Math.max(0,Math.min(target.sets.length-1,result.setNumber-1)):Math.max(0,target.sets.findIndex(s=>!s.done));
+     if(result.weightKg===null&&result.reps===null)throw new Error("I heard the note, but couldn't identify weight or reps. Try again.");
+     patchSet(ei,si,{...(result.weightKg!==null?{weight:String(result.weightKg)}:{}),...(result.reps!==null?{reps:String(result.reps)}:{}),...(result.rpe!==null?{rpe:String(result.rpe)}:{}),done:true});
+     setExpandedExerciseId(target.exerciseId);setVoiceMessage("Logged "+target.name+" · "+(result.weightKg!==null?result.weightKg+" kg":"weight not stated")+" × "+(result.reps!==null?result.reps+" reps":"reps not stated"));
+     setRest({exerciseId:target.exerciseId,endsAt:Date.now()+target.rest*1000});
+    }catch(error){setVoiceMessage(error.message||"Voice logging failed.");}
+    finally{setVoiceBusy(false);}
+   };
+   recorder.start();setVoiceRecording(true);setVoiceMessage("Listening… say the exercise, weight and reps.");
+  }catch(error){setVoiceMessage(error.message||"Could not start recording.");}
+ };
+ const stopVoiceLog=()=>{if(voiceRecorder.current&&voiceRecorder.current.state!=="inactive")voiceRecorder.current.stop()};
+
  useEffect(()=>{let t=setInterval(()=>setTick(Date.now()),500);return()=>clearInterval(t)},[]);
  const restRemaining=rest?Math.max(0,Math.ceil((rest.endsAt-tick)/1000)):0,elapsed=Math.floor((tick-active.startedAt)/1000);
  const mm=String(Math.floor(elapsed/60)).padStart(2,"0"),ss=String(elapsed%60).padStart(2,"0");
@@ -133,7 +167,7 @@ function Workout({active,data,patchSet,setData,finish,onBack}) {
   return "Use last session as your baseline. Add a rep where possible while keeping 1–3 reps in reserve.";
  };
  return <><div className="workouttop"><button className="textbtn" onClick={onBack}>← Workouts</button><span className="live">SESSION LIVE</span><span className="timer">◷ {mm}:{ss}</span></div>
- <div className="workouttitle"><div className="eyebrow">ACTIVE SESSION · {active.date}</div><h2>{active.templateName||data.templates.find(t=>t.id===active.templateId)?.name||"Custom session"}</h2><p>{completed} of {total} working sets completed</p><div className="progressbar"><i style={{width:(completed/Math.max(total,1)*100)+"%"}}/></div><button className="primary small mt" onClick={()=>setPicker({mode:"add"})}>＋ Add exercise</button></div>
+ <div className="workouttitle"><div className="eyebrow">ACTIVE SESSION · {active.date}</div><h2>{active.templateName||data.templates.find(t=>t.id===active.templateId)?.name||"Custom session"}</h2><p>{completed} of {total} working sets completed</p><div className="progressbar"><i style={{width:(completed/Math.max(total,1)*100)+"%"}}/></div><button className="primary small mt" onClick={()=>setPicker({mode:"add"})}>＋ Add exercise</button><div className="voiceLogRow"><button className={"voiceLogButton "+(voiceRecording?"recording":"")} onClick={voiceRecording?stopVoiceLog:startVoiceLog} disabled={voiceBusy}>{voiceRecording?"Stop recording":voiceBusy?"Processing voice…":"🎙 Log set by voice"}</button>{voiceMessage&&<small>{voiceMessage}</small>}</div></div>
  {active.exercises.map((e,ei)=><div className="panel exercisePanel" key={e.exerciseId+"-"+ei}>
  <div className="panelhead exercisePanelHead"><button className="exerciseToggle" onClick={()=>setExpandedExerciseId(expandedExerciseId===e.exerciseId?"":e.exerciseId)}><div className="exercise-heading"><ExerciseIcon name={e.name} muscle={e.muscle}/><div><span className="eyebrow">{e.muscle}</span><h3>{e.name}</h3><small className="exerciseSubline">{e.sets.filter(x=>x.done).length}/{e.sets.length} sets · {e.repsTarget} reps</small></div></div><span className="expandMark">{expandedExerciseId===e.exerciseId?"−":"＋"}</span></button><span className="pill">{e.sets.filter(x=>x.done).length}/{e.sets.length} DONE</span></div>
  {expandedExerciseId===e.exerciseId&&<div className="exerciseDetails"><div className="exerciseDetailTop"><span>Target {e.repsTarget} reps · Rest {e.rest}s</span><button className="howtoButton" onClick={()=>setGuide(e)}>How to ↗</button></div> {(()=>{let prev=data.sessions.slice().reverse().flatMap(session=>session.exercises.filter(x=>x.exerciseId===e.exerciseId).map(x=>({date:session.date,sets:x.sets}))).at(0);return <p className="previous">{prev?"PREVIOUS · "+prev.date+" — "+prev.sets.map(x=>`${x.weight||"—"}kg × ${x.reps||"—"}`).join(" / "):"FIRST LOGGED SESSION"}</p>})()}
