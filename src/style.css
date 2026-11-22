@@ -246,3 +246,54 @@
 .guideVideo{display:flex;justify-content:center;align-items:center;text-align:center;text-decoration:none;margin-top:5px}
 .guideDisclaimer{font-size:10px;line-height:1.5;color:var(--muted);margin:12px 2px 2px}
 @media(max-width:600px){.guideModal{max-height:92dvh}.howtoButton{min-height:36px}}
+
+
+/* FORMA coach-first home and nutrition intelligence */
+.coachWelcome{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:24px 26px;margin:0 0 14px;border:1px solid #40553f;border-radius:16px;background:linear-gradient(120deg,#1d3022,#141d17)}
+.coachWelcome h2{font:700 clamp(22px,3vw,30px) Manrope;margin:7px 0 5px;letter-spacing:-.8px}
+.coachWelcome p{font-size:12px;color:#aebdac;margin:0}
+.coachActions{display:flex;gap:8px;flex-wrap:wrap}
+.coachSnapshot{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 20px}
+.coachSnapshot>div{min-width:0;padding:15px 17px;border:1px solid var(--line);border-radius:12px;background:#17221a}
+.coachSnapshot small,.coachSnapshot b,.coachSnapshot span{display:block}
+.coachSnapshot small{font:9px 'DM Mono';letter-spacing:1px;color:#9eaf9f}
+.coachSnapshot b{font:700 19px Manrope;margin:7px 0 3px;overflow-wrap:anywhere}
+.coachSnapshot span{font-size:10px;color:var(--muted)}
+.nutritionSummary{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:18px;padding:20px;border:1px solid #3d523e;border-radius:14px;background:linear-gradient(130deg,#1b2c20,#151e18)}
+.nutritionCalories small,.nutritionCalories strong,.nutritionCalories span{display:block}
+.nutritionCalories small{font:9px 'DM Mono';letter-spacing:1px;color:#a4b5a2}
+.nutritionCalories strong{font:700 36px Manrope;letter-spacing:-1px;margin:7px 0 0}
+.nutritionCalories span{font-size:11px;color:#aebdac}
+.nutritionMacros{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;align-items:center}
+.nutritionMacros>div{min-width:0;padding:11px 9px;border-radius:10px;background:#101811}
+.nutritionMacros b,.nutritionMacros small{display:block}
+.nutritionMacros b{font-size:18px}
+.nutritionMacros small{font:8px 'DM Mono';letter-spacing:.7px;color:#a5b5a2;margin:4px 0 10px}
+.nutritionMacros i{display:block;height:4px;border-radius:5px;background:#344436;overflow:hidden}
+.nutritionMacros em{display:block;height:100%;background:var(--lime);border-radius:5px}
+.calorieBaseline{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.calorieBaseline>div{padding:14px;border:1px solid var(--line);border-radius:10px;background:#17221a}
+.calorieBaseline small,.calorieBaseline b{display:block}
+.calorieBaseline small{font:8px 'DM Mono';letter-spacing:.8px;color:#a3b39f}
+.calorieBaseline b{font:700 20px Manrope;margin-top:7px}
+.calorieBaseline p{grid-column:1/-1;color:#aebdac;font-size:11px;line-height:1.6;margin:4px 0 0}
+.nutritionSetup p,.weightTrendInsight p{font-size:12px;line-height:1.6;color:#aebdac}
+.weightTrendInsight b{font:700 26px Manrope}
+.weightTrendInsight b span{font:600 13px 'DM Sans';color:var(--lime);margin-left:8px}
+@media(max-width:600px){
+ .coachWelcome{align-items:flex-start;flex-direction:column;padding:19px}
+ .coachActions{width:100%}.coachActions button{flex:1}
+ .coachSnapshot{gap:7px}
+ .coachSnapshot>div{padding:11px 9px}
+ .coachSnapshot small{font-size:7px;letter-spacing:.5px}
+ .coachSnapshot b{font-size:14px}
+ .coachSnapshot span{font-size:9px}
+ .nutritionSummary{grid-template-columns:1fr;padding:15px;gap:14px}
+ .nutritionCalories strong{font-size:32px}
+ .nutritionMacros{gap:6px}
+ .nutritionMacros>div{padding:10px 7px}
+ .nutritionMacros b{font-size:16px}
+ .calorieBaseline{gap:7px}
+ .calorieBaseline>div{padding:11px 9px}
+ .calorieBaseline b{font-size:17px}
+}
