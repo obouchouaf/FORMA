@@ -29,7 +29,7 @@ const templates=[
  {id:"legs",name:"Legs",tag:"Quads · hamstrings · calves",ids:[],description:"Controlled lower-body work"}
 ];
 const initial=()=>({profile:{age:29,height:184,weight:98,proteinTarget:170},exercises:[...seedExercises,...extraExercises.map(e=>({...e,id:uid(),notes:""}))],templates:templates.map(t=>({...t,ids: t.id==="upper"?seedExercises.slice(0,7).map(e=>e.id):t.id==="push"?[seedExercises[0].id,seedExercises[7].id,seedExercises[8].id,seedExercises[1].id,seedExercises[6].id]:t.id==="pull"?[seedExercises[2].id,seedExercises[3].id,seedExercises[5].id]:[seedExercises[9].id,seedExercises[10].id,seedExercises[11].id,seedExercises[12].id]})),sessions:[],measurements:[],meals:[],recovery:[],planned:[],active:null,photos:[]});
-function load(){try{const saved=JSON.parse(localStorage.getItem("forma-v1")||"{}");const base=initial();return {...base,...saved,profile:{...base.profile,...(saved.profile||{})}}}catch{return initial()}}
+function load(){try{const saved=JSON.parse(localStorage.getItem("forma-v1")||"{}");const base=initial();let exercises=saved.exercises||base.exercises;if((saved.catalogVersion||0)<2){const names=new Set(exercises.map(e=>e.name.toLowerCase()));exercises=[...exercises,...base.exercises.filter(e=>!names.has(e.name.toLowerCase()))]}return {...base,...saved,catalogVersion:2,exercises,profile:{...base.profile,...(saved.profile||{})}}}catch{return initial()}}
 const fmt=n=>Math.round(n||0).toLocaleString();
 function App(){
  const [data,setData]=useState(load),[page,setPage]=useState("Dashboard"),[modal,setModal]=useState(""),[selected,setSelected]=useState("upper"),[toast,setToast]=useState("");
