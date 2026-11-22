@@ -315,12 +315,27 @@ function SplitIcon({name="",size=42}){
 function Trend({data}){if(data.length<2)return <div className="empty compact"><span>⌁</span><p>Log at least two body-weight entries to see a trend.</p></div>;let min=Math.min(...data.map(x=>x.value))-1,max=Math.max(...data.map(x=>x.value))+1;let pts=data.map((x,i)=>`${i/(data.length-1)*100},${100-(x.value-min)/(max-min)*100}`).join(" ");return <div className="trend"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points={pts} fill="none" stroke="#8eb69a" strokeWidth="2.5" vectorEffect="non-scaling-stroke"/>{data.map((x,i)=><circle cx={i/(data.length-1)*100} cy={100-(x.value-min)/(max-min)*100} r="1.7" fill="#8eb69a"/>)}</svg><div className="trendlabels"><span>{data[0].label}</span><b>{data.at(-1).value} kg</b><span>{data.at(-1).label}</span></div></div>}
 function Modal({name,close,data,setData,updateProfile,setToast}){
  const [form,setForm]=useState({date:today()}),[photo,setPhoto]=useState(""),[photoName,setPhotoName]=useState(""),[analyzing,setAnalyzing]=useState(false),[estimate,setEstimate]=useState(null),[error,setError]=useState("");
+ const [voiceAudio,setVoiceAudio]=useState(""),[recording,setRecording]=useState(false);
+ const mealRecorder=useRef(null),mealChunks=useRef([]);
+ const toggleMealVoice=async()=>{
+  if(recording){mealRecorder.current?.stop();return}
+  try{
+   if(!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==="undefined")throw new Error("Voice recording is not supported in this browser.");
+   const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+   const mime=["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg"].find(t=>MediaRecorder.isTypeSupported(t))||"";
+   const recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);mealRecorder.current=recorder;mealChunks.current=[];
+   recorder.ondataavailable=e=>{if(e.data.size)mealChunks.current.push(e.data)};
+   recorder.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());setRecording(false);try{const blob=new Blob(mealChunks.current,{type:recorder.mimeType||"audio/mp4"});const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error("Could not read the recording."));reader.readAsDataURL(blob)});setVoiceAudio(dataUrl);setEstimate(null);setError("Voice note ready. Tap Estimate calories & macros to process it.");}catch(e){setError(e.message||"Could not prepare the voice note.")}};
+   recorder.start();setRecording(true);setError("Listening… describe your meal and portions.");
+  }catch(e){setError(e.message||"Could not start recording.")}
+ };
+
  const change=(k,v)=>setForm(f=>({...f,[k]:v}));
  const field=(label,key,type="number")=><label>{label}<input type={type} value={form[key]||""} onChange={e=>change(key,e.target.value)}/></label>;
  const analyze=async()=>{
-  if(!form.name?.trim()&&!photo){setError("Describe the meal or add a photo first.");return}
+  if(!form.name?.trim()&&!photo&&!voiceAudio){setError("Describe the meal, record a voice note or add a photo first.");return}
   setAnalyzing(true);setError("");setEstimate(null);
-  try{const response=await fetch("/api/estimate-meal",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({description:form.name||"",image:photo||null})});const result=await response.json();if(!response.ok)throw new Error(result.error||"Could not estimate this meal.");setEstimate(result);setForm(f=>({...f,name:result.mealName||f.name,ingredients:result.ingredients||"",calories:result.calories,protein:result.protein,carbs:result.carbs,fat:result.fat,confidence:result.confidence,assumptions:result.assumptions||""}))}catch(e){setError(e.message||"Meal analysis failed. Please try again.")}finally{setAnalyzing(false)}
+  try{const response=await fetch(voiceAudio?"/api/voice-log":"/api/estimate-meal",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(voiceAudio?{mode:"nutrition",audio:voiceAudio}:{description:form.name||"",image:photo||null})});const result=await response.json();if(!response.ok)throw new Error(result.error||"Could not estimate this meal.");setEstimate(result);setForm(f=>({...f,name:result.mealName||f.name,ingredients:result.ingredients||"",calories:result.calories,protein:result.protein,carbs:result.carbs,fat:result.fat,confidence:result.confidence,assumptions:result.assumptions||""}))}catch(e){setError(e.message||"Meal analysis failed. Please try again.")}finally{setAnalyzing(false)}
  };
  const save=()=>{
   if(name==="measurement"){setData(d=>({...d,measurements:[...d.measurements,{...form,id:uid()}]}));if(form.weight)updateProfile({weight:+form.weight})}
@@ -333,9 +348,9 @@ function Modal({name,close,data,setData,updateProfile,setToast}){
  {name==="measurement"&&<div className="formgrid">{field("Date","date","date")}{field("Weight (kg)","weight")}{field("Waist (cm)","waist")}{field("Chest (cm)","chest")}{field("Arm (cm)","arm")}{field("Shoulder (cm)","shoulder")}{field("Thigh (cm)","thigh")}</div>}
  {name==="meal"&&<div className="mealForm">
  <p className="muted">Just describe your meal in your own words. Add portions if you know them. Or take a photo — FORMA will identify the food and estimate its nutrition.</p>
- <label>Describe your meal<textarea rows="3" placeholder="e.g. A big plate of chicken tagine with potatoes, olives and some bread. About one chicken thigh." value={form.name||""} onChange={e=>{change("name",e.target.value);setEstimate(null)}}/></label>
+ <label>Describe your meal<textarea rows="3" placeholder="e.g. A big plate of chicken tagine with potatoes, olives and some bread. About one chicken thigh." value={form.name||""} onChange={e=>{change("name",e.target.value);setEstimate(null)}}/></label><div className="mealVoiceRow"><button type="button" className={"voiceLogButton "+(recording?"recording":"")} onClick={toggleMealVoice}>{recording?"Stop recording":"🎙 Describe meal by voice"}</button><small>{voiceAudio?"Voice note ready": "Speak naturally, including portions if you can."}</small></div>
  <label className="mealPhoto"><span>PHOTO (OPTIONAL)</span><input type="file" accept="image/*" capture="environment" onChange={async e=>{const file=e.target.files?.[0];if(!file)return;setError("");try{const compressed=await compressMealPhoto(file);setPhoto(compressed);setPhotoName(file.name);setEstimate(null)}catch(error){setError(error.message||"Could not prepare that photo.")}finally{e.target.value=""}}}/>{photoName&&<small>Attached: {photoName} · optimized for upload <button className="subtle danger" type="button" onClick={()=>{setPhoto("");setPhotoName("");setEstimate(null)}}>Remove</button></small>}</label>
- <button className="primary analyzeMeal" disabled={analyzing||(!form.name?.trim()&&!photo)} onClick={analyze}>{analyzing?"Analyzing your meal…":"✦ Estimate calories & macros"}</button>
+ <button className="primary analyzeMeal" disabled={analyzing||recording||(!form.name?.trim()&&!photo&&!voiceAudio)} onClick={analyze}>{analyzing?"Analyzing your meal…":"✦ Estimate calories & macros"}</button>
  {error&&<p className="mealError">{error}</p>}
  {estimate&&<div className="mealEstimate"><div className="mealEstimateHead"><span className="eyebrow green">ESTIMATED NUTRITION</span><span className="pill">{estimate.confidence||"Estimate"}</span></div><h4>{estimate.mealName}</h4><div className="mealCalories"><strong>{fmt(estimate.calories)}</strong><span>kcal</span></div><div className="macroGrid"><div><b>{fmt(estimate.protein)}g</b><small>PROTEIN</small></div><div><b>{fmt(estimate.carbs)}g</b><small>CARBS</small></div><div><b>{fmt(estimate.fat)}g</b><small>FAT</small></div></div><p>{estimate.ingredients}</p>{estimate.assumptions&&<small className="muted">Assumptions: {estimate.assumptions}</small>}<small className="muted">AI estimate only. Portion size, hidden oil and recipe variations can change the actual values.</small></div>}
  </div>}
