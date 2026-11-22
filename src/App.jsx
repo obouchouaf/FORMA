@@ -78,7 +78,7 @@ function App(){
  const lowerTwo={id:"lower2",name:"Lower 2 · Optional",tag:"Posterior chain · unilateral · calves",ids:findIds(["Hack Squat","Romanian Deadlift","Seated Leg Curl","Hip Thrust","Seated Calf Raise"]),description:"Optional second lower-body session"};
  const accessoryDay={id:"accessories",name:"Core & Accessories",tag:"Rear delts · lower traps · core · lower back",ids:findIds(accessoryNames.fifth),description:"Optional fifth session"};
  const workoutTemplates=[...data.templates,lowerTwo,...(data.accessoryPlan==="fifth"?[accessoryDay]:[])];
- const startWorkout=(templateId)=>{if(active){setPage("Workout");setToast("You already have a workout in progress. Resume it first.");return}const t=workoutTemplates.find(x=>x.id===templateId);if(!t)return;let ids=[...t.ids];if(data.accessoryPlan==="split"&&templateId==="push")ids.push(...findIds(accessoryNames.split.push));if(data.accessoryPlan==="split"&&templateId==="pull")ids.push(...findIds(accessoryNames.split.pull));if(data.accessoryPlan==="upper"&&templateId==="upper")ids.push(...findIds(accessoryNames.upper));const feel="Good";const ex=ids.map(id=>{let e=data.exercises.find(x=>x.id===id);if(!e)return null;let prev=previous(id);return {exerciseId:id,name:e.name,muscle:e.muscle,rest:e.rest,repsTarget:e.reps,sets:Array.from({length:e.sets},(_,i)=>({weight:prev?.sets?.[i]?.weight||prev?.sets?.at(-1)?.weight||"",reps:prev?.sets?.[i]?.reps||prev?.sets?.at(-1)?.reps||"",done:false,rpe:""})),notes:""}}).filter(Boolean);setData(d=>({...d,active:{id:uid(),templateId,date:today(),templateName:t.name,startedAt:Date.now(),feel,exercises:ex}}));setPage("Workout");};
+ const startWorkout=(templateId)=>{if(active){setPage("Workout");setToast("You already have a workout in progress. Resume it first.");return}const t=workoutTemplates.find(x=>x.id===templateId);if(!t)return;let ids=[...t.ids];if(data.accessoryPlan==="split"&&templateId==="push")ids.push(...findIds(accessoryNames.split.push));if(data.accessoryPlan==="split"&&templateId==="pull")ids.push(...findIds(accessoryNames.split.pull));if(data.accessoryPlan==="upper"&&templateId==="upper")ids.push(...findIds(accessoryNames.upper));const feel="Good";const ex=ids.map(id=>{let e=data.exercises.find(x=>x.id===id);if(!e)return null;let prev=previous(id);return {exerciseId:id,name:e.name,muscle:e.muscle,equipment:e.equipment,rest:e.rest,repsTarget:e.reps,sets:Array.from({length:e.sets},(_,i)=>({weight:prev?.sets?.[i]?.weight||prev?.sets?.at(-1)?.weight||"",reps:prev?.sets?.[i]?.reps||prev?.sets?.at(-1)?.reps||"",done:false,rpe:""})),notes:""}}).filter(Boolean);setData(d=>({...d,active:{id:uid(),templateId,date:today(),templateName:t.name,startedAt:Date.now(),feel,exercises:ex}}));setPage("Workout");};
  const finish=()=>{if(!active)return;let duration=Math.round((Date.now()-active.startedAt)/60000);let s={...active,endedAt:Date.now(),duration};setData(d=>({...d,sessions:[...d.sessions,s],active:null}));setModal("");setToast("Workout saved to your history");};
  const patchSet=(ei,si,patch)=>setData(d=>({...d,active:{...d.active,exercises:d.active.exercises.map((e,i)=>i!==ei?e:{...e,sets:e.sets.map((s,j)=>j!==si?s:{...s,...patch})})}}));
  const addExercise=()=>{let name=window.prompt("Exercise name");if(!name?.trim())return;let e={id:uid(),name:name.trim(),muscle:"Other",equipment:"",sets:3,reps:"8–12",rest:90,notes:""};setData(d=>({...d,exercises:[...d.exercises,e]}));setToast("Exercise added")};
@@ -106,86 +106,92 @@ function WeeklyActivity({sessions}){const days=Array.from({length:7},(_,i)=>{con
 
 function Empty({title,body,action,click}){return <div className="empty"><span>✳</span><h3>{title}</h3><p>{body}</p>{action&&<button className="secondary" onClick={click}>{action} ↗</button>}</div>}
 function Workout({active,data,patchSet,setData,finish,onBack}) {
- const [tick,setTick]=useState(Date.now()),[rest,setRest]=useState(null),[picker,setPicker]=useState(null),[guide,setGuide]=useState(null),[expandedExerciseId,setExpandedExerciseId]=useState(active.exercises[0]?.exerciseId||"");
+ const [tick,setTick]=useState(Date.now()),[rest,setRest]=useState(null),[picker,setPicker]=useState(null),[guide,setGuide]=useState(null),[focusExerciseId,setFocusExerciseId]=useState(null);
  const [voiceRecording,setVoiceRecording]=useState(false),[voiceBusy,setVoiceBusy]=useState(false),[voiceMessage,setVoiceMessage]=useState("");
  const voiceRecorder=useRef(null),voiceChunks=useRef([]);
+ useEffect(()=>{const t=setInterval(()=>setTick(Date.now()),500);return()=>clearInterval(t)},[]);
+ const restRemaining=rest?Math.max(0,Math.ceil((rest.endsAt-tick)/1000)):0,elapsed=Math.floor((tick-active.startedAt)/1000);
+ const mm=String(Math.floor(elapsed/60)).padStart(2,"0"),ss=String(elapsed%60).padStart(2,"0");
+ const completed=active.exercises.reduce((a,e)=>a+e.sets.filter(x=>x.done).length,0),total=active.exercises.reduce((a,e)=>a+e.sets.length,0);
+ const focused=active.exercises.find(e=>e.exerciseId===focusExerciseId)||null;
+ const activeSetIndex=focused?focused.sets.findIndex(s=>!s.done):-1,activeSet=focused&&activeSetIndex>=0?focused.sets[activeSetIndex]:null;
+ const previousFor=e=>data.sessions.slice().reverse().flatMap(s=>s.exercises.filter(x=>x.exerciseId===e.exerciseId).map(x=>({date:s.date,sets:x.sets}))).find(x=>x.sets?.some(s=>s.done))||null;
+ const repBounds=e=>{const a=(String(e.repsTarget||"8–12").match(/\d+/g)||[]).map(Number);return {min:a[0]||8,max:a[1]||a[0]||12}};
+ const recommendation=(e,si)=>{
+  const prior=previousFor(e),old=prior?.sets?.[Math.min(si,prior.sets.length-1)]||prior?.sets?.filter(s=>s.done).at(-1),weight=Number(old?.weight||e.sets?.[si]?.weight||0);
+  if(!prior||!weight)return {weight:null,label:"Build your baseline",detail:"First recorded session. Choose a controlled load that leaves around 2–3 reps in reserve."};
+  const {min,max}=repBounds(e),rpe=Number(old?.rpe||0),reps=Number(old?.reps||0),step=/dumbbell/i.test(e.equipment||"")?1:2.5,done=prior.sets.filter(s=>s.done);
+  const earned=done.length>0&&done.every(s=>Number(s.reps)>=max)&&done.every(s=>!Number(s.rpe)||Number(s.rpe)<=8);
+  let next=weight,label="Repeat last load",detail="Use your last successful load and aim to improve reps with clean technique.";
+  if(earned){next=weight+step;label="Small progression";detail="You reached the top of the rep range. Try the smallest practical increase if your form was solid."}
+  else if(rpe>=9||(reps>0&&reps<min)){next=Math.max(step,weight-step);label="Prioritise control";detail="Your last set was very demanding or below target. Consider a small reduction and keep reps controlled."}
+  return {weight:Math.round(next*10)/10,label,detail};
+ };
+ const progression=(e,si,set)=>{
+  const prior=previousFor(e),old=prior?.sets?.[Math.min(si,prior.sets.length-1)]||prior?.sets?.filter(s=>s.done).at(-1);
+  if(!old)return {label:"Baseline set",kind:"neutral",detail:"This gives FORMA a starting point for your next session."};
+  const oldMetric=(Number(old.weight)||0)*(Number(old.reps)||0),newMetric=(Number(set.weight)||0)*(Number(set.reps)||0);
+  if(newMetric>oldMetric||(!old.weight&&!set.weight&&Number(set.reps)>Number(old.reps)))return {label:"Beat last time",kind:"good",detail:"You improved your logged performance compared with the previous session."};
+  if(newMetric===oldMetric&&Number(set.reps)===Number(old.reps))return {label:"On track",kind:"steady",detail:"You matched your previous logged performance."};
+  return {label:"Adjust if needed",kind:"adjust",detail:"Performance was lower than last time. That can happen—prioritise technique and recovery."};
+ };
+ const startRest=e=>{setTick(Date.now());setRest({exerciseId:e.exerciseId,endsAt:Date.now()+Number(e.rest||90)*1000})};
+ const logCurrentSet=()=>{if(!focused||!activeSet)return;if(!activeSet.reps){setVoiceMessage("Add the reps you completed before saving this set.");return}patchSet(active.exercises.findIndex(e=>e.exerciseId===focused.exerciseId),activeSetIndex,{done:true});setVoiceMessage("");startRest(focused)};
  const startVoiceLog=async()=>{
   try{
-   if(!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==="undefined")throw new Error("Voice recording is not supported in this browser. Try Safari's dictation from the keyboard instead.");
-   const stream=await navigator.mediaDevices.getUserMedia({audio:true});
-   const mime=["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg"].find(t=>MediaRecorder.isTypeSupported(t))||"";
+   if(!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==="undefined")throw new Error("Voice recording is not supported in this browser. Try keyboard dictation instead.");
+   const stream=await navigator.mediaDevices.getUserMedia({audio:true}),mime=["audio/mp4","audio/webm;codecs=opus","audio/webm","audio/ogg"].find(t=>MediaRecorder.isTypeSupported(t))||"";
    const recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);voiceRecorder.current=recorder;voiceChunks.current=[];
    recorder.ondataavailable=e=>{if(e.data.size)voiceChunks.current.push(e.data)};
    recorder.onstop=async()=>{
     stream.getTracks().forEach(t=>t.stop());setVoiceRecording(false);setVoiceBusy(true);setVoiceMessage("Understanding your set…");
     try{
-     const blob=new Blob(voiceChunks.current,{type:recorder.mimeType||"audio/mp4"});
-     const audio=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error("Could not read the recording."));reader.readAsDataURL(blob)});
-     const focused=active.exercises.find(e=>e.exerciseId===expandedExerciseId&&e.sets.some(s=>!s.done))||active.exercises.find(e=>e.sets.some(s=>!s.done));
-     const nextSet=focused?Math.max(1,focused.sets.findIndex(s=>!s.done)+1):1;
-     const response=await fetch("/api/voice-log",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"workout",audio,activeExercise:focused?.name||"",nextSet,exercises:active.exercises.map(e=>({name:e.name,nextSet:Math.max(1,e.sets.findIndex(s=>!s.done)+1)}))})});
+     const blob=new Blob(voiceChunks.current,{type:recorder.mimeType||"audio/mp4"}),audio=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error("Could not read the recording."));reader.readAsDataURL(blob)});
+     const target=(focusExerciseId&&active.exercises.find(e=>e.exerciseId===focusExerciseId&&e.sets.some(s=>!s.done)))||active.exercises.find(e=>e.sets.some(s=>!s.done)),nextSet=target?Math.max(1,target.sets.findIndex(s=>!s.done)+1):1;
+     const response=await fetch("/api/voice-log",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"workout",audio,activeExercise:target?.name||"",nextSet,exercises:active.exercises.map(e=>({name:e.name,nextSet:Math.max(1,e.sets.findIndex(s=>!s.done)+1)}))})});
      const result=await response.json();if(!response.ok)throw new Error(result.error||"Could not understand that set.");
-     let target=active.exercises.find(e=>e.name.toLowerCase()===String(result.exerciseName||focused?.name||"").toLowerCase())||focused;
-     if(!target||result.type!=="workout_set")throw new Error("I couldn't match that note to an exercise. Try saying the exercise name, weight and reps.");
-     const ei=active.exercises.findIndex(e=>e.exerciseId===target.exerciseId);
-     const si=result.setNumber?Math.max(0,Math.min(target.sets.length-1,result.setNumber-1)):Math.max(0,target.sets.findIndex(s=>!s.done));
+     const matched=active.exercises.find(e=>e.name.toLowerCase()===String(result.exerciseName||target?.name||"").toLowerCase())||target;
+     if(!matched||result.type!=="workout_set")throw new Error("I couldn't match that note to an exercise. Say the exercise name, weight and reps.");
+     const ei=active.exercises.findIndex(e=>e.exerciseId===matched.exerciseId),si=result.setNumber?Math.max(0,Math.min(matched.sets.length-1,result.setNumber-1)):Math.max(0,matched.sets.findIndex(s=>!s.done));
      if(result.weightKg===null&&result.reps===null)throw new Error("I heard the note, but couldn't identify weight or reps. Try again.");
      patchSet(ei,si,{...(result.weightKg!==null?{weight:String(result.weightKg)}:{}),...(result.reps!==null?{reps:String(result.reps)}:{}),...(result.rpe!==null?{rpe:String(result.rpe)}:{}),done:true});
-     setExpandedExerciseId(target.exerciseId);setVoiceMessage("Logged "+target.name+" · "+(result.weightKg!==null?result.weightKg+" kg":"weight not stated")+" × "+(result.reps!==null?result.reps+" reps":"reps not stated"));
-     setRest({exerciseId:target.exerciseId,endsAt:Date.now()+target.rest*1000});
-    }catch(error){setVoiceMessage(error.message||"Voice logging failed.");}
-    finally{setVoiceBusy(false);}
+     setFocusExerciseId(matched.exerciseId);setVoiceMessage("Logged "+matched.name+" · "+(result.weightKg!==null?result.weightKg+" kg":"weight not stated")+" × "+(result.reps!==null?result.reps+" reps":"reps not stated"));startRest(matched);
+    }catch(error){setVoiceMessage(error.message||"Voice logging failed.");}finally{setVoiceBusy(false)}
    };
    recorder.start();setVoiceRecording(true);setVoiceMessage("Listening… say the exercise, weight and reps.");
-  }catch(error){setVoiceMessage(error.message||"Could not start recording.");}
+  }catch(error){setVoiceMessage(error.message||"Could not start recording.")}
  };
  const stopVoiceLog=()=>{if(voiceRecorder.current&&voiceRecorder.current.state!=="inactive")voiceRecorder.current.stop()};
-
- useEffect(()=>{let t=setInterval(()=>setTick(Date.now()),500);return()=>clearInterval(t)},[]);
- const restRemaining=rest?Math.max(0,Math.ceil((rest.endsAt-tick)/1000)):0,elapsed=Math.floor((tick-active.startedAt)/1000);
- const mm=String(Math.floor(elapsed/60)).padStart(2,"0"),ss=String(elapsed%60).padStart(2,"0");
- const completed=active.exercises.reduce((a,e)=>a+e.sets.filter(x=>x.done).length,0),total=active.exercises.reduce((a,e)=>a+e.sets.length,0);
  const addToSession=(exercise,replaceIndex=null)=>{
-  const prev=data.sessions.slice().reverse().flatMap(session=>session.exercises.filter(x=>x.exerciseId===exercise.id).map(x=>x.sets)).at(0);
-  const item={exerciseId:exercise.id,name:exercise.name,muscle:exercise.muscle,equipment:exercise.equipment,rest:exercise.rest,repsTarget:exercise.reps,sets:Array.from({length:exercise.sets||3},(_,i)=>({weight:prev?.[i]?.weight||prev?.at(-1)?.weight||"",reps:prev?.[i]?.reps||prev?.at(-1)?.reps||"",done:false,rpe:""})),notes:""};
-  setData(d=>({...d,active:{...d.active,exercises:replaceIndex===null?[...d.active.exercises,item]:d.active.exercises.map((x,i)=>i===replaceIndex?item:x)}}));
-  setPicker(null);
+  const prior=data.sessions.slice().reverse().flatMap(s=>s.exercises.filter(x=>x.exerciseId===exercise.id).map(x=>x.sets)).at(-1);
+  const item={exerciseId:exercise.id,name:exercise.name,muscle:exercise.muscle,equipment:exercise.equipment,rest:exercise.rest,repsTarget:exercise.reps,sets:Array.from({length:exercise.sets||3},(_,i)=>({weight:prior?.[i]?.weight||prior?.at(-1)?.weight||"",reps:prior?.[i]?.reps||prior?.at(-1)?.reps||"",done:false,rpe:""})),notes:""};
+  setData(d=>({...d,active:{...d.active,exercises:replaceIndex===null?[...d.active.exercises,item]:d.active.exercises.map((x,i)=>i===replaceIndex?item:x)}}));setPicker(null);
  };
- const removeExercise=ei=>setData(d=>({...d,active:{...d.active,exercises:d.active.exercises.filter((_,i)=>i!==ei)}}));
- const advice=e=>{
-  const prior=data.sessions.slice().reverse().flatMap(session=>session.exercises.filter(x=>x.exerciseId===e.exerciseId).map(x=>({date:session.date,sets:x.sets}))).at(0);
-  if(!prior)return "First time logging this movement — choose a load that lets you finish with 2–3 reps in reserve.";
-  const done=prior.sets.filter(x=>x.done&&x.reps!=="");
-  if(!done.length)return "Last time had no completed rep entries. Aim for consistent, controlled sets before increasing load.";
-  const rpes=done.map(x=>Number(x.rpe)).filter(Boolean),avg=rpes.length?rpes.reduce((a,b)=>a+b,0)/rpes.length:null;
-  const targets=(e.repsTarget.match(/\d+/g)||[]).map(Number),top=targets.length?Math.max(...targets):12;
-  const allTop=done.length>=Math.min(e.sets.length,prior.sets.length)&&done.every(x=>Number(x.reps)>=top);
-  if(allTop&&(!avg||avg<=8))return "You reached the top of the rep range. If technique was clean, add the smallest available weight next time and build reps again.";
-  if(avg!==null&&avg<=7)return "This felt relatively easy (average effort "+avg.toFixed(1)+"/10). Keep the load and aim for 1–2 more reps per set next time, within the target range.";
-  if(avg!==null&&avg>=9)return "This was very demanding (average effort "+avg.toFixed(1)+"/10). Keep the load or reduce it slightly next time; prioritise clean reps.";
-  if(avg!==null)return "Effort was productive (about "+avg.toFixed(1)+"/10). Keep the load and try to add one rep to a set before increasing weight.";
-  return "Use last session as your baseline. Add a rep where possible while keeping 1–3 reps in reserve.";
- };
- return <><div className="workouttop"><button className="textbtn" onClick={onBack}>← Workouts</button><span className="live">SESSION LIVE</span><span className="timer">◷ {mm}:{ss}</span></div>
- <div className="workouttitle"><div className="eyebrow">ACTIVE SESSION · {active.date}</div><h2>{active.templateName||data.templates.find(t=>t.id===active.templateId)?.name||"Custom session"}</h2><p>{completed} of {total} working sets completed</p><div className="progressbar"><i style={{width:(completed/Math.max(total,1)*100)+"%"}}/></div><button className="primary small mt" onClick={()=>setPicker({mode:"add"})}>＋ Add exercise</button><div className="voiceLogRow"><button className={"voiceLogButton "+(voiceRecording?"recording":"")} onClick={voiceRecording?stopVoiceLog:startVoiceLog} disabled={voiceBusy}>{voiceRecording?"Stop recording":voiceBusy?"Processing voice…":"🎙 Log set by voice"}</button>{voiceMessage&&<small>{voiceMessage}</small>}</div></div>
- {active.exercises.map((e,ei)=><div className="panel exercisePanel" key={e.exerciseId+"-"+ei}>
- <div className="panelhead exercisePanelHead"><button className="exerciseToggle" onClick={()=>setExpandedExerciseId(expandedExerciseId===e.exerciseId?"":e.exerciseId)}><div className="exercise-heading"><ExerciseIcon name={e.name} muscle={e.muscle}/><div><span className="eyebrow">{e.muscle}</span><h3>{e.name}</h3><small className="exerciseSubline">{e.sets.filter(x=>x.done).length}/{e.sets.length} sets · {e.repsTarget} reps</small></div></div><span className="expandMark">{expandedExerciseId===e.exerciseId?"−":"＋"}</span></button><span className="pill">{e.sets.filter(x=>x.done).length}/{e.sets.length} DONE</span></div>
- {expandedExerciseId===e.exerciseId&&<div className="exerciseDetails"><div className="exerciseDetailTop"><span>Target {e.repsTarget} reps · Rest {e.rest}s</span><button className="howtoButton" onClick={()=>setGuide(e)}>How to ↗</button></div> {(()=>{let prev=data.sessions.slice().reverse().flatMap(session=>session.exercises.filter(x=>x.exerciseId===e.exerciseId).map(x=>({date:session.date,sets:x.sets}))).at(0);return <p className="previous">{prev?"PREVIOUS · "+prev.date+" — "+prev.sets.map(x=>`${x.weight||"—"}kg × ${x.reps||"—"}`).join(" / "):"FIRST LOGGED SESSION"}</p>})()}
- <p className="progresshint">COACH · {advice(e)}</p>
- <div className="sethead"><span>SET LOG</span><span>WEIGHT</span><span>REPS</span><span>EFFORT</span><span>DONE</span></div>
- {e.sets.map((set,si)=><div className={"setrow "+(set.done?"setdone":"")} key={si}><div className="setindex"><b className="setnumber">{si+1}</b>{e.sets.length>1&&<button type="button" className="removeSet" aria-label={"Remove set "+(si+1)} onClick={()=>setData(d=>({...d,active:{...d.active,exercises:d.active.exercises.map((x,i)=>i!==ei?x:{...x,sets:x.sets.filter((_,j)=>j!==si)})}}))}>×</button>}</div>
- <label className="setfield"><span>WEIGHT · KG {e.equipment==="Dumbbells"?"(EACH)":"(TOTAL)"}</span><input aria-label="Weight kg" type="number" inputMode="decimal" placeholder="—" value={set.weight} onChange={x=>patchSet(ei,si,{weight:x.target.value})}/></label>
- <label className="setfield"><span>REPS</span><select aria-label="Repetitions" value={set.reps} onChange={x=>patchSet(ei,si,{reps:x.target.value})}><option value="">—</option>{Array.from({length:17},(_,i)=>i+4).map(n=><option key={n} value={String(n)}>{n}</option>)}</select></label>
- <label className="setfield rpefield"><span>EFFORT</span><select aria-label="Effort RPE" value={set.rpe} onChange={x=>patchSet(ei,si,{rpe:x.target.value})}><option value="">—</option>{[6,7,8,9,10].map(n=><option key={n} value={n}>{n} · {n===6?"Easy":n===7?"Moderate":n===8?"Hard":n===9?"Very hard":"Max"}</option>)}</select></label>
- <label className="donefield"><input type="checkbox" checked={set.done} onChange={x=>patchSet(ei,si,{done:x.target.checked})}/><span>{set.done?"DONE":"DONE?"}</span></label></div>)}
- <div className="exercisefoot"><button className="subtle" onClick={()=>setData(d=>({...d,active:{...d.active,exercises:d.active.exercises.map((x,i)=>i!==ei?x:{...x,sets:[...x.sets,{weight:"",reps:"",done:false,rpe:""}]})}}))}>＋ Add set</button><button className="secondary" onClick={()=>setPicker({mode:"replace",index:ei})}>⇄ Replace</button><button className="subtle danger" onClick={()=>removeExercise(ei)}>Remove exercise</button><button className="secondary restStart" onClick={()=>{setTick(Date.now());setRest({exerciseId:e.exerciseId,endsAt:Date.now()+e.rest*1000})}}>Rest · {Math.round(e.rest/60*10)/10} min</button></div>
- {rest&&rest.exerciseId===e.exerciseId&&restRemaining>0&&<div className="restbar"><b>Rest · {e.name}</b><strong>{Math.floor(restRemaining/60)}:{String(restRemaining%60).padStart(2,"0")}</strong><button className="subtle" onClick={()=>setRest(null)}>Stop</button><button className="subtle" onClick={()=>setRest(r=>r?{...r,endsAt:r.endsAt+15000}:r)}>+15s</button></div>} </div>}
- </div>)}
- <div className="finishbar"><div><b>{completed}/{total} sets</b><small>Changes save automatically</small></div><button className="subtle danger discardWorkout" onClick={()=>{if(window.confirm("Discard this entire workout? It will be removed and will not appear in your history.")){setData(d=>({...d,active:null}));setRest(null);onBack();}}}>Discard workout</button><button className="primary" onClick={()=>{if(window.confirm("Finish and save this workout?"))finish()}}>Finish workout ✓</button></div>
- {guide&&<ExerciseGuide exercise={guide} close={()=>setGuide(null)}/>}\n {picker&&<ExercisePicker exercises={data.exercises} close={()=>setPicker(null)} choose={exercise=>addToSession(exercise,picker.mode==="replace"?picker.index:null)}/>}
+ const removeExercise=ei=>{const removed=active.exercises[ei];setData(d=>({...d,active:{...d.active,exercises:d.active.exercises.filter((_,i)=>i!==ei)}}));if(removed?.exerciseId===focusExerciseId)setFocusExerciseId(null)};
+ const nextExercise=active.exercises.find(e=>e.sets.some(s=>!s.done)&&e.exerciseId!==focusExerciseId),restLabel=Math.floor(restRemaining/60)+":"+String(restRemaining%60).padStart(2,"0");
+ return <>
+  <div className="workouttop"><button className="textbtn" onClick={focusExerciseId?()=>setFocusExerciseId(null):onBack}>← {focusExerciseId?"Workout":"Workouts"}</button><span className="live">SESSION LIVE</span><span className="timer">◷ {mm}:{ss}</span></div>
+  <div className="workouttitle focusWorkoutTitle"><div className="eyebrow">ACTIVE SESSION · {active.date}</div><h2>{active.templateName||data.templates.find(t=>t.id===active.templateId)?.name||"Custom session"}</h2><p>{completed} of {total} working sets completed</p><div className="progressbar"><i style={{width:(completed/Math.max(total,1)*100)+"%"}}/></div></div>
+  {focusExerciseId&&focused?<section className="exerciseFocusPage">
+   <div className="exerciseFocusHeading"><div className="exerciseFocusArt"><ExerciseIcon name={focused.name} muscle={focused.muscle}/></div><div><span className="eyebrow">{focused.muscle} · {focused.equipment||"Exercise"}</span><h2>{focused.name}</h2><p>{focused.repsTarget} reps · {focused.sets.length} sets · {focused.rest}s rest</p></div><button className="howtoButton" onClick={()=>setGuide(focused)}>How to ↗</button></div>
+   <div className="exerciseFocusMeta"><div><small>PREVIOUS SESSION</small><b>{previousFor(focused)?previousFor(focused).date:"First time"}</b><span>{previousFor(focused)?previousFor(focused).sets.filter(s=>s.done).map(s=>(s.weight?s.weight+" kg":"Bodyweight")+" × "+(s.reps||"—")).join(" · "):"FORMA will learn your baseline"}</span></div><div><small>EXERCISE PROGRESS</small><b>{focused.sets.filter(s=>s.done).length} / {focused.sets.length} sets</b><span>One set at a time</span></div></div>
+   <div className="focusSetHistory"><div className="focusSectionLabel">YOUR SETS</div>{focused.sets.map((set,si)=><div className={"focusSetHistoryRow "+(set.done?"logged":"")+(si===activeSetIndex?" current":"")} key={si}><span className="focusSetNumber">{set.done?"✓":si+1}</span><span><b>Set {si+1}</b><small>{set.done?(set.weight?set.weight+" kg":"Bodyweight")+" × "+set.reps+" reps"+(set.rpe?" · RPE "+set.rpe:""):"Waiting to log"}</small></span><span>{set.done?"LOGGED":si===activeSetIndex?"UP NEXT":"QUEUED"}</span></div>)}</div>
+   {activeSet?<div className="focusLogCard"><div className="focusLogHeader"><div><span className="eyebrow">CURRENT SET</span><h3>Set {activeSetIndex+1} <small>of {focused.sets.length}</small></h3></div><span className="focusSetPill">SET {activeSetIndex+1}</span></div>
+    {(()=>{const rec=recommendation(focused,activeSetIndex);return <div className="weightRecommendation"><div><small>FORMA RECOMMENDS</small><b>{rec.weight===null?"Choose a starting load":rec.weight+" kg"}</b><span>{rec.label} · {rec.detail}</span></div>{rec.weight!==null&&<button type="button" className="useWeightButton" onClick={()=>patchSet(active.exercises.findIndex(e=>e.exerciseId===focused.exerciseId),activeSetIndex,{weight:String(rec.weight)})}>Use {rec.weight} kg</button>}</div>})()}
+    <div className="focusInputGrid"><label><span>WEIGHT · KG {focused.equipment==="Dumbbells"?"EACH":"TOTAL"}</span><div className="focusNumberInput"><input aria-label="Weight in kilograms" type="number" inputMode="decimal" min="0" step="0.5" placeholder="0" value={activeSet.weight} onChange={e=>patchSet(active.exercises.findIndex(x=>x.exerciseId===focused.exerciseId),activeSetIndex,{weight:e.target.value})}/><small>kg</small></div></label><label><span>REPS COMPLETED</span><input aria-label="Reps completed" type="number" inputMode="numeric" min="0" max="100" placeholder={repBounds(focused).min+"–"+repBounds(focused).max} value={activeSet.reps} onChange={e=>patchSet(active.exercises.findIndex(x=>x.exerciseId===focused.exerciseId),activeSetIndex,{reps:e.target.value})}/></label></div>
+    <label className="focusEffortField"><span>EFFORT · OPTIONAL</span><select aria-label="Effort rating" value={activeSet.rpe} onChange={e=>patchSet(active.exercises.findIndex(x=>x.exerciseId===focused.exerciseId),activeSetIndex,{rpe:e.target.value})}><option value="">How hard did it feel?</option>{[6,7,8,9,10].map(n=><option key={n} value={n}>{n} / 10 · {n===6?"Easy":n===7?"Moderate":n===8?"Hard":n===9?"Very hard":"Maximum"}</option>)}</select></label>
+    <button type="button" className="primary focusCompleteButton" onClick={logCurrentSet}>Complete set <span>✓</span></button>
+    {rest&&rest.exerciseId===focused.exerciseId&&restRemaining>0&&<div className="focusRestTimer"><div><small>REST BEFORE NEXT SET</small><b>{restLabel}</b></div><button className="subtle" onClick={()=>setRest(null)}>Skip</button><button className="subtle" onClick={()=>setRest(r=>r?{...r,endsAt:r.endsAt+15000}:r)}>+15 sec</button></div>}
+   </div>:<div className="focusExerciseComplete"><span className="focusCompleteMark">✓</span><span className="eyebrow">EXERCISE COMPLETE</span><h3>Nice work.</h3><p>{focused.name} is logged. Your performance is saved as part of this live workout.</p>{nextExercise?<button className="primary" onClick={()=>setFocusExerciseId(nextExercise.exerciseId)}>Next exercise ↗</button>:<button className="secondary" onClick={()=>setFocusExerciseId(null)}>Back to workout</button>}</div>}
+   {focused.sets.some(s=>s.done)&&<div className="focusLatestProgress">{(()=>{const i=focused.sets.findIndex(s=>s.done),result=progression(focused,i,focused.sets[i]);return <><span className={"progressSignal "+result.kind}>{result.label}</span><p>{result.detail}</p></>})()}</div>}
+   {voiceMessage&&<p className="focusVoiceMessage">{voiceMessage}</p>}
+   <div className="focusExerciseActions"><button className="subtle" onClick={()=>setPicker({mode:"replace",index:active.exercises.findIndex(e=>e.exerciseId===focused.exerciseId)})}>⇄ Replace exercise</button><button className="subtle danger" onClick={()=>removeExercise(active.exercises.findIndex(e=>e.exerciseId===focused.exerciseId))}>Remove exercise</button></div>
+  </section>:<><div className="focusExerciseList">{active.exercises.map((e,ei)=>{const done=e.sets.filter(s=>s.done).length,allDone=done===e.sets.length;return <button type="button" className={"focusExerciseCard "+(allDone?"isComplete":"")} key={e.exerciseId+"-"+ei} onClick={()=>setFocusExerciseId(e.exerciseId)}><span className="focusExerciseIcon"><ExerciseIcon name={e.name} muscle={e.muscle}/></span><span className="focusExerciseCopy"><small>{e.muscle}</small><b>{e.name}</b><span>{done}/{e.sets.length} sets · {e.repsTarget} reps</span></span><span className="focusExerciseArrow">{allDone?"✓":"›"}</span></button>})}</div><div className="workoutActionRows"><button className="primary small" onClick={()=>setPicker({mode:"add"})}>＋ Add exercise</button><button className={"voiceLogButton "+(voiceRecording?"recording":"")} onClick={voiceRecording?stopVoiceLog:startVoiceLog} disabled={voiceBusy}>{voiceRecording?"Stop recording":voiceBusy?"Processing voice…":"🎙 Log set by voice"}</button>{voiceMessage&&<small>{voiceMessage}</small>}</div></>}
+  <div className="finishbar"><div><b>{completed}/{total} sets</b><small>Changes save automatically</small></div><button className="subtle danger discardWorkout" onClick={()=>{if(window.confirm("Discard this entire workout? It will be removed and will not appear in your history.")){setData(d=>({...d,active:null}));setRest(null);onBack();}}}>Discard workout</button><button className="primary" onClick={()=>{if(window.confirm("Finish and save this workout?"))finish()}}>Finish workout ✓</button></div>
+  {guide&&<ExerciseGuide exercise={guide} close={()=>setGuide(null)}/>}
+  {picker&&<ExercisePicker exercises={data.exercises} close={()=>setPicker(null)} choose={exercise=>addToSession(exercise,picker.mode==="replace"?picker.index:null)}/>}
  </>;
 }
-
 const exerciseGuides={
  "smith machine incline press":{setup:"Set the bench to a low incline (about 15–30°) and position it so the bar comes down to your upper chest.",steps:["Set your feet firmly and keep your shoulder blades gently retracted against the bench.","Grip slightly wider than shoulder width and unrack with control.","Lower the bar toward the upper chest while keeping wrists stacked over elbows.","Press up smoothly without bouncing or aggressively locking the elbows."],cues:["Keep your shoulders down and back.","Use a pain-free range; don't force a deep stretch."]},
  "cable chest fly":{setup:"Set both pulleys around shoulder height, choose a light load and stand in a stable split stance.",steps:["Keep a soft bend in your elbows and brace your trunk.","Bring your hands together in a wide hugging arc in front of your chest.","Pause briefly, then let your arms open under control without letting the shoulders roll forward."],cues:["The movement comes from the shoulders, not from bending and straightening the elbows.","Avoid using momentum or stretching into shoulder discomfort."]},
