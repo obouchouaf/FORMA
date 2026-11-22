@@ -54,13 +54,13 @@ function nutritionTargets(profile){
  const maintenance=Math.round((bmr*activity)/50)*50;
  const adjustment={fat_loss:-350,recomp:-200,maintain:0,muscle_gain:150}[profile.goal||"recomp"];
  const calories=Math.max(1300,maintenance+adjustment);
- const protein=Math.round(weight*1.8),fat=Math.round(weight*0.8);
+ const protein=Number(profile.proteinTarget)>0?Number(profile.proteinTarget):Math.round(weight*1.8),fat=Math.round(weight*0.8);
  const carbs=Math.max(0,Math.round((calories-protein*4-fat*9)/4));
  return {maintenance,calories,protein,fat,carbs};
 }
 function averageWeight(measurements,from,to){
  const values=measurements.filter(m=>m.date>=from&&m.date<=to&&Number(m.weight)>0).map(m=>Number(m.weight));
- return values.length>=3?values.reduce((a,b)=>a+b,0)/values.length:null;
+ return new Set(measurements.filter(m=>m.date>=from&&m.date<=to&&Number(m.weight)>0).map(m=>m.date)).size>=3?values.reduce((a,b)=>a+b,0)/values.length:null;
 }
 
 function App(){
