@@ -146,3 +146,34 @@
  .libraryrow>.exerciseIcon svg{width:25px;height:25px}
  .exercise-heading .exerciseIcon{width:44px;height:44px}
 }
+
+/* FORMA flexible training session and movement library */
+.workouttitle .primary{margin-top:14px}
+.exercisefoot{flex-wrap:wrap}
+.exercisefoot .danger{color:#e4a49a}
+.exercisePicker{display:flex;flex-direction:column;max-height:min(88dvh,820px)}
+.pickerSearch{width:100%;min-height:48px;margin:18px 0 10px;padding:12px 14px;border:1px solid #40533e;border-radius:11px;background:#101711;color:#f3f6ef;font:14px 'DM Sans'}
+.pickerFilters{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
+.pickerFilters select{min-width:0;width:100%;min-height:44px;padding:9px 11px;border:1px solid #40533e;border-radius:10px;background:#101711;color:#edf3eb;font:12px 'DM Sans'}
+.pickerResults{overflow:auto;min-height:120px;max-height:52dvh;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.pickerResult{display:flex;align-items:center;gap:11px;width:100%;padding:10px 3px;text-align:left;background:transparent;color:var(--text);border:0;border-bottom:1px solid #2a362c}
+.pickerResult>.exerciseIcon{width:38px;height:38px}
+.pickerResult>span:nth-child(2){flex:1;min-width:0}
+.pickerResult b,.pickerResult small{display:block}
+.pickerResult b{font-size:12px}
+.pickerResult small{font-size:10px;color:var(--muted);margin-top:3px}
+.pickerResult strong{color:var(--lime);font-size:20px;padding:0 8px}
+.pickerResult:active{background:#26372a}
+.pickerCount{font-size:10px;color:var(--muted);margin:10px 0 0}
+.mealForm>label{display:flex;flex-direction:column;gap:7px;margin:14px 0;font-size:11px;color:#b4c2b2}
+.mealForm textarea{width:100%;resize:vertical;min-height:72px;padding:12px;border:1px solid #40533e;border-radius:10px;background:#101711;color:#f0f5ed;font:13px 'DM Sans';line-height:1.5}
+.mealForm .formgrid{margin:12px 0}
+@media(max-width:600px){
+ .exercisefoot{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+ .exercisefoot>*{min-width:0;min-height:43px;padding:8px 6px;font-size:10px}
+ .exercisePicker{max-height:91dvh}
+ .pickerResults{max-height:52dvh}
+ .pickerFilters select{font-size:13px}
+ .pickerResult{min-height:58px}
+ .mealForm textarea{font-size:16px}
+}
