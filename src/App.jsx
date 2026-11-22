@@ -121,7 +121,7 @@ function Workout({active,data,patchSet,setData,finish,onBack}) {
     try{
      const blob=new Blob(voiceChunks.current,{type:recorder.mimeType||"audio/mp4"});
      const audio=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(new Error("Could not read the recording."));reader.readAsDataURL(blob)});
-     const focused=active.exercises.find(e=>e.exerciseId===expandedExerciseId)||active.exercises.find(e=>e.sets.some(s=>!s.done));
+     const focused=active.exercises.find(e=>e.exerciseId===expandedExerciseId&&e.sets.some(s=>!s.done))||active.exercises.find(e=>e.sets.some(s=>!s.done));
      const nextSet=focused?Math.max(1,focused.sets.findIndex(s=>!s.done)+1):1;
      const response=await fetch("/api/voice-log",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"workout",audio,activeExercise:focused?.name||"",nextSet,exercises:active.exercises.map(e=>({name:e.name,nextSet:Math.max(1,e.sets.findIndex(s=>!s.done)+1)}))})});
      const result=await response.json();if(!response.ok)throw new Error(result.error||"Could not understand that set.");
