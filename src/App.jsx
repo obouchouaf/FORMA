@@ -1,7 +1,7 @@
 import React, {useEffect,useMemo,useState} from "react";
 import "./style.css";
 
-const dateKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const dateKey=value=>{if(typeof value==="string"&&/^\\d{4}-\\d{2}-\\d{2}$/.test(value))return value;const d=value instanceof Date?value:new Date(value);if(!(d instanceof Date)||Number.isNaN(d.getTime()))return "";return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
 const today=()=>dateKey(new Date());
 const uid=()=>Math.random().toString(36).slice(2,10);
 const seedExercises=[
