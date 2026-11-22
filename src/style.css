@@ -463,3 +463,28 @@ input:focus,select:focus,textarea:focus{border-color:var(--lime)!important}
  .homePlanCopy span{font-size:10px}
  .homeDisclosure>summary{padding:14px}
 }
+
+
+/* Voice-first capture and set logging */
+.voiceLogRow,.mealVoiceRow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:13px}
+.voiceLogButton{border:1px solid #626a62;background:#1a201c;color:#f4f6f3;border-radius:999px;padding:11px 16px;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.voiceLogButton:before{content:"";width:8px;height:8px;border-radius:50%;background:#d7ff00}
+.voiceLogButton.recording{background:#391d1b;border-color:#ff786d;color:#fff}
+.voiceLogButton.recording:before{background:#ff786d;animation:voicePulse 1s infinite}
+.voiceLogButton:disabled{opacity:.55;cursor:wait}
+.voiceLogRow small,.mealVoiceRow small{font-size:11px;color:#aeb6b0;line-height:1.45}
+@keyframes voicePulse{50%{opacity:.35;transform:scale(.8)}}
+.mealVoiceRow{padding:12px;border:1px solid #303633;border-radius:11px;background:#151a17}
+.mealVoiceRow small{flex:1}
+.setrow{transition:background .15s ease}
+.setfield input,.setfield select{font-size:16px!important;font-weight:700!important;min-height:44px}
+.setdone{border-color:#d7ff00!important;background:#20251a!important}
+.setdone .setnumber{background:#d7ff00!important;color:#090b09!important}
+.exercisefoot{display:flex;flex-wrap:wrap;gap:8px}
+@media(max-width:600px){
+ .voiceLogRow{align-items:flex-start}
+ .voiceLogRow .voiceLogButton{width:100%;justify-content:center;min-height:46px}
+ .mealVoiceRow{align-items:flex-start;flex-direction:column}
+ .mealVoiceRow .voiceLogButton{width:100%;justify-content:center}
+ .setrow{gap:7px}
+}
