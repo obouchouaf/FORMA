@@ -1,0 +1,16 @@
+{
+  "name": "FORMA — Performance Journal",
+  "short_name": "FORMA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#101510",
+  "theme_color": "#101510",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
