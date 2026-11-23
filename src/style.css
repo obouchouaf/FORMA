@@ -606,3 +606,62 @@ input:focus,select:focus,textarea:focus{border-color:var(--lime)!important}
  .exerciseFocusPage,.exerciseFocusArt .exerciseIcon,.focusLogCard,.focusRestTimer,.focusRestTimer b,.main> :not(header){animation:none!important}
  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important}
 }
+
+
+/* FORMA motion system: confident, athletic, quick */
+.pageTransition{min-height:40vh;animation:formaPageEnter .32s cubic-bezier(.18,.78,.24,1) both;transform-origin:50% 10%}
+.workoutStage{animation:formaStageEnter .32s cubic-bezier(.18,.78,.24,1) both;transform-origin:50% 10%}
+.workoutStage.isExercise{animation:formaExerciseStage .3s cubic-bezier(.18,.78,.24,1) both}
+.workouttop .live{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border:1px solid #455b3d;border-radius:99px;background:#1b291d;animation:formaLiveGlow 2.4s ease-in-out infinite}
+.workouttop .live:before{content:"";display:block;width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 0 #c7f36b66;animation:formaLiveDot 1.7s ease-out infinite}
+.nav{position:relative;isolation:isolate;overflow:hidden;transition:color .2s ease,background .22s ease,transform .18s ease,border-color .22s ease}
+.nav:before{content:"";position:absolute;inset:5px auto 5px 0;width:3px;border-radius:4px;background:var(--lime);transform:scaleY(0);transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+.nav.chosen:before{transform:scaleY(1)}
+.navicon{display:grid;place-items:center;width:25px;height:25px;transition:transform .22s cubic-bezier(.2,.8,.2,1),color .2s ease}
+.nav.chosen .navicon{transform:scale(1.08)}
+.navGlyph{filter:drop-shadow(0 1px 2px #0005)}
+.nav:active{transform:scale(.975)}
+.nav.chosen{background:linear-gradient(100deg,#2b3e2d,#202d23);box-shadow:inset 0 0 0 1px #a6ce7130}
+.morecard{position:relative;overflow:hidden;transition:transform .2s cubic-bezier(.2,.8,.2,1),border-color .2s,background .2s,box-shadow .2s}
+.morecard:before{content:"";position:absolute;width:110px;height:110px;right:-65px;top:-65px;border-radius:50%;background:radial-gradient(circle,#c7f36b15,transparent 68%);pointer-events:none}
+.morecard:active{transform:scale(.985)}
+.moreicon{width:44px;height:44px;border:1px solid #71845b55;background:linear-gradient(145deg,#354b32,#202e23);box-shadow:inset 0 1px #ffffff12,0 5px 14px #0003;transition:transform .22s cubic-bezier(.2,.8,.2,1),background .2s}
+.morecard:hover .moreicon{transform:translateY(-2px) rotate(-3deg);background:linear-gradient(145deg,#405a39,#273829)}
+.moreGlyph{display:block;filter:drop-shadow(0 1px 2px #0004)}
+.splitIcon{filter:drop-shadow(0 2px 3px #0004);stroke-width:1.7}
+.templatebadge,.homePlanIcon{position:relative;overflow:hidden;border:1px solid #71845b55;background:linear-gradient(145deg,#354a33,#202d23);box-shadow:inset 0 1px #ffffff12,0 5px 14px #0002}
+.templatebadge:after,.homePlanIcon:after{content:"";position:absolute;inset:4px;border:1px solid #c7f36b18;border-radius:9px;pointer-events:none}
+.templatebadge .splitIcon,.homePlanIcon .splitIcon{position:relative;z-index:1;stroke-width:1.65;filter:drop-shadow(0 2px 3px #0005)}
+.exerciseFocusArt{border:1px solid #71845b55;background:radial-gradient(circle at 35% 25%,#496244,#26372a 65%,#1a251d);box-shadow:inset 0 1px #ffffff18,0 8px 22px #0003}
+.exerciseFocusArt .exerciseIcon{filter:drop-shadow(0 3px 5px #0005)}
+.focusExerciseIcon{border:1px solid #71845b55;background:linear-gradient(145deg,#354a33,#202d23);box-shadow:inset 0 1px #ffffff12}
+.primary{position:relative;overflow:hidden;transition:transform .18s cubic-bezier(.2,.8,.2,1),filter .18s,box-shadow .18s}
+.primary:after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 25%,#ffffff24 48%,transparent 68%);transform:translateX(-130%);transition:transform .5s ease;pointer-events:none}
+.primary:hover:after{transform:translateX(130%)}
+.primary:active{transform:scale(.975);box-shadow:0 2px 8px #c7f36b22}
+.focusCompleteButton{min-height:54px;letter-spacing:.1px;box-shadow:0 8px 22px #c7f36b20}
+.focusCompleteButton:active{animation:formaCompleteTap .24s ease}
+.focusSetHistoryRow{transition:background .2s,border-color .2s,transform .2s}
+.focusSetHistoryRow.logged .focusSetNumber{box-shadow:0 0 0 4px #c7f36b12;animation:formaSetDone .3s cubic-bezier(.2,.8,.2,1)}
+.focusRestTimer{border:1px solid #718b4e66;box-shadow:inset 0 0 22px #c7f36b09,0 8px 24px #0002}
+.homeProgress i{transition:background .25s,transform .25s,box-shadow .25s}
+.homeProgress i.filled{box-shadow:0 0 12px #c7f36b55}
+@keyframes formaPageEnter{from{opacity:0;transform:translateY(12px) scale(.992);filter:blur(2px)}to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@keyframes formaStageEnter{from{opacity:0;transform:translateY(10px) scale(.994)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes formaExerciseStage{from{opacity:0;transform:translateX(15px) scale(.99)}to{opacity:1;transform:translateX(0) scale(1)}}
+@keyframes formaLiveDot{0%{box-shadow:0 0 0 0 #c7f36b77}70%{box-shadow:0 0 0 6px #c7f36b00}100%{box-shadow:0 0 0 0 #c7f36b00}}
+@keyframes formaLiveGlow{0%,100%{border-color:#455b3d}50%{border-color:#8ba866}}
+@keyframes formaCompleteTap{50%{transform:scale(.965)}}
+@keyframes formaSetDone{from{transform:scale(.86);opacity:.55}to{transform:scale(1);opacity:1}}
+@media(max-width:600px){
+ .nav{border-radius:12px}
+ .nav.chosen{box-shadow:inset 0 2px var(--lime),0 3px 12px #0002}
+ .nav.chosen:before{display:none}
+ .nav.chosen .navicon{transform:translateY(-1px) scale(1.08)}
+ .moreicon{width:42px;height:42px}
+}
+@media(prefers-reduced-motion:reduce){
+ .pageTransition,.workoutStage,.workoutStage.isExercise,.workouttop .live,.workouttop .live:before,.focusSetHistoryRow.logged .focusSetNumber{animation:none!important}
+ .nav,.navicon,.morecard,.moreicon,.primary,.focusSetHistoryRow,.homeProgress i{transition:none!important}
+ .primary:after{display:none}
+}
