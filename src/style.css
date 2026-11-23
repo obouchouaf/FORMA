@@ -516,3 +516,24 @@ input:focus,select:focus,textarea:focus{border-color:var(--lime)!important}
 .focusLatestProgress{padding:13px 15px;border:1px solid #303633;border-radius:11px;background:#121514;margin:12px 0}.progressSignal{display:inline-flex;padding:6px 9px;border-radius:7px;font-size:10px;font-weight:800}.progressSignal.good{background:#26351e;color:#d7ff00}.progressSignal.steady{background:#26302a;color:#d5e3d6}.progressSignal.adjust{background:#382d1e;color:#f0c88b}.progressSignal.neutral{background:#252b26;color:#c7d2c8}.focusLatestProgress p{font-size:11px;line-height:1.5;color:#aeb6b0;margin:8px 0 0}
 .focusExerciseActions{display:flex;justify-content:space-between;gap:12px;margin:12px 0}.workoutActionRows{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:16px 0}.workoutActionRows>small,.focusVoiceMessage{width:100%;font-size:11px;color:#aeb6b0}
 @media(max-width:600px){.focusSetHistoryTop{align-items:flex-start;flex-direction:column}.focusSetActions{width:100%}.focusSetActions button{flex:1}.focusPreviousRow{gap:8px}.focusPreviousRow strong{font-size:11px}.focusExerciseCard{padding:12px;gap:10px}.focusExerciseIcon{flex-basis:46px;width:46px;height:46px}.focusExerciseIcon .exerciseIcon{width:39px;height:39px}.focusExerciseCopy b{font-size:13px}.exerciseFocusHeading{align-items:flex-start;gap:11px;padding:14px}.exerciseFocusArt{flex-basis:54px;width:54px;height:54px}.exerciseFocusArt .exerciseIcon{width:48px;height:48px}.exerciseFocusHeading h2{font-size:19px}.exerciseFocusHeading .howtoButton{font-size:9px;padding:7px}.exerciseFocusMeta{gap:7px}.exerciseFocusMeta>div{padding:11px 10px}.exerciseFocusMeta b{font-size:12px}.focusLogCard{padding:14px}.weightRecommendation{align-items:flex-start;flex-direction:column}.useWeightButton{width:100%}.focusInputGrid{gap:8px}.focusInputGrid input{height:55px;font-size:22px!important}.focusRestTimer{flex-wrap:wrap}.focusRestTimer>div{flex-basis:100%}.focusExerciseActions{align-items:flex-start;flex-direction:column}.focusExerciseActions button{width:100%;text-align:left}.workoutActionRows .voiceLogButton{width:100%;justify-content:center}}
+
+
+/* FORMA UX refinement — faster set entry, editable history, clearer plan */
+.focusStepper,.focusRepStepper{display:flex;align-items:center;gap:6px;min-width:0}
+.focusStepper input,.focusRepStepper input{flex:1;min-width:0}
+.focusStepper button,.focusRepStepper button{width:34px;height:42px;flex:none;border:1px solid #465247;border-radius:8px;background:#202820;color:#dce9d6;font-size:18px;font-weight:700}
+.focusStepper button:active,.focusRepStepper button:active{background:#344332}
+.focusEditSet{border:1px solid #485747;border-radius:7px;background:#202820;color:var(--lime);font-size:10px;font-weight:700;padding:6px 9px}
+.focusCancelEdit{display:block;margin:8px auto 0}
+.focusSetHistoryRow{grid-template-columns:30px minmax(0,1fr) auto auto;gap:10px}
+.focusSetHistoryRow>span:last-of-type{min-width:48px;text-align:right}
+.homePlanAction{min-width:68px;padding:10px 13px;border:1px solid #60724b;border-radius:8px;background:#263326;color:var(--lime);font-size:11px;font-weight:800}
+.homePlanCopy{flex:1;min-width:0}
+.homePlanCopy b,.homePlanCopy span{display:block}
+.homePlanCopy span{color:#aab6aa;font-size:11px;margin-top:3px}
+@media(max-width:600px){
+ .focusStepper button,.focusRepStepper button{width:38px;height:48px}
+ .focusEditSet{padding:8px 10px}
+ .focusSetHistoryRow{grid-template-columns:28px minmax(0,1fr) auto auto;gap:7px}
+ .homePlanAction{min-width:58px}
+}
