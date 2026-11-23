@@ -537,3 +537,72 @@ input:focus,select:focus,textarea:focus{border-color:var(--lime)!important}
  .focusSetHistoryRow{grid-template-columns:28px minmax(0,1fr) auto auto;gap:7px}
  .homePlanAction{min-width:58px}
 }
+
+
+/* FORMA focused exercise flow: current set first, details on demand */
+.exerciseFocusPage{animation:formaExerciseIn .28s cubic-bezier(.2,.75,.25,1) both}
+.exerciseFocusHeading{position:relative;overflow:hidden;min-height:88px;padding:13px 16px;gap:13px;background:linear-gradient(115deg,#1a251c,#111713 72%)}
+.exerciseFocusHeading:after{content:"";position:absolute;width:150px;height:150px;right:-75px;top:-85px;border:1px solid #c7f36b22;border-radius:50%;box-shadow:0 0 0 16px #c7f36b08,0 0 0 32px #c7f36b05;pointer-events:none}
+.exerciseFocusArt{flex-basis:58px;width:58px;height:58px;border-radius:12px;background:linear-gradient(145deg,#2b3d2b,#1b281e);box-shadow:inset 0 0 0 1px #c7f36b1a}
+.exerciseFocusArt .exerciseIcon{width:49px;height:49px;animation:formaIconIn .35s ease both}
+.exerciseFocusHeading h2{font-size:clamp(19px,3.6vw,25px);margin:3px 0}
+.exerciseFocusHeading p{font-size:10px;margin:0}
+.howtoButton{position:relative;z-index:1;white-space:nowrap}
+.focusLogCard{margin:9px 0 12px;padding:14px;animation:formaFadeUp .25s ease both}
+.focusLogHeader{margin-bottom:10px}
+.focusLogHeader h3{font-size:19px}
+.weightRecommendation{padding:9px 11px;margin-bottom:11px;gap:8px}
+.weightRecommendation b{font-size:22px}
+.weightRecommendation span{font-size:10px}
+.recommendationDetails{margin-top:2px;color:#9eaa9f;font-size:10px}
+.recommendationDetails summary{cursor:pointer;list-style:none;color:#b6c7ac;font-size:9px}
+.recommendationDetails summary::-webkit-details-marker{display:none}
+.recommendationDetails summary:after{content:" +";color:var(--lime)}
+.recommendationDetails[open] summary:after{content:" −"}
+.recommendationDetails p{margin:5px 0 0;line-height:1.5}
+.focusStepper{display:grid;grid-template-columns:34px minmax(0,1fr) auto 34px;align-items:center;gap:5px;width:100%;min-width:0}
+.focusStepper input{width:100%;min-width:0;height:52px!important;padding:0 2px!important;text-align:center;font-size:22px!important}
+.focusStepper small{position:static!important;transform:none!important;right:auto!important;top:auto!important;display:block;white-space:nowrap;font-size:10px!important;color:#9ca69e}
+.focusStepper button{width:34px;height:42px;padding:0;border-radius:9px}
+.focusRepStepper{display:grid;grid-template-columns:34px minmax(0,1fr) 34px;align-items:center;gap:5px;width:100%;min-width:0}
+.focusRepStepper input{width:100%;min-width:0;height:52px!important;padding:0 2px!important;text-align:center;font-size:22px!important}
+.focusRepStepper button{width:34px;height:42px;padding:0;border-radius:9px}
+.focusExtraDetails{margin:10px 0 12px;border:1px solid #303b31;border-radius:11px;background:#111712;overflow:hidden}
+.focusExtraDetails>summary{display:flex;align-items:center;gap:9px;padding:11px 13px;cursor:pointer;list-style:none}
+.focusExtraDetails>summary::-webkit-details-marker{display:none}
+.focusExtraDetails>summary span{font-size:11px;font-weight:700;color:#e4ece1}
+.focusExtraDetails>summary small{font-size:10px;color:#8f9d90;flex:1}
+.focusExtraDetails>summary b{font-size:16px;color:var(--lime);font-weight:500;transition:transform .2s}
+.focusExtraDetails[open]>summary b{transform:rotate(45deg)}
+.focusExtraDetails .exerciseFocusMeta{padding:0 10px;margin:0 0 10px}
+.focusExtraDetails .focusPreviousSets{margin:0 10px 10px}
+.focusSetHistory{margin-top:10px}
+.focusRestTimer{animation:formaRestIn .22s ease both}
+.focusRestTimer b{animation:formaTimerPulse 1.8s ease-in-out infinite}
+.main> :not(header){animation:formaFadeUp .2s ease both}
+.nav{transition:background .2s ease,color .2s ease,transform .2s ease}
+.nav:active{transform:scale(.96)}
+.primary,.secondary,.homePlanAction,.focusSetActions button{transition:transform .16s ease,filter .16s ease,background .16s ease}
+.primary:active,.secondary:active,.homePlanAction:active{transform:scale(.98)}
+@keyframes formaFadeUp{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@keyframes formaExerciseIn{from{opacity:0;transform:translateX(9px)}to{opacity:1;transform:translateX(0)}}
+@keyframes formaIconIn{from{opacity:.5;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+@keyframes formaRestIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes formaTimerPulse{0%,100%{opacity:1}50%{opacity:.78}}
+@media(max-width:600px){
+ .exerciseFocusHeading{padding:11px 12px;gap:10px;min-height:74px}
+ .exerciseFocusArt{flex-basis:48px;width:48px;height:48px}
+ .exerciseFocusArt .exerciseIcon{width:42px;height:42px}
+ .exerciseFocusHeading h2{font-size:18px}
+ .exerciseFocusHeading p{font-size:9px}
+ .exerciseFocusHeading .howtoButton{padding:7px 8px;font-size:9px}
+ .focusLogCard{padding:12px}
+ .focusStepper{grid-template-columns:32px minmax(0,1fr) auto 32px;gap:4px}
+ .focusStepper button,.focusRepStepper button{width:32px;height:40px}
+ .focusStepper input,.focusRepStepper input{height:48px!important;font-size:20px!important}
+ .focusExtraDetails>summary{padding:10px}
+}
+@media(prefers-reduced-motion:reduce){
+ .exerciseFocusPage,.exerciseFocusArt .exerciseIcon,.focusLogCard,.focusRestTimer,.focusRestTimer b,.main> :not(header){animation:none!important}
+ *,*::before,*::after{scroll-behavior:auto!important;transition:none!important}
+}
