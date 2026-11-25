@@ -5,7 +5,7 @@ export default async function handler(req,res){
  try{
   const d=req.body||{},audio=d.audio;
   if(typeof audio!=="string"||audio.length>12_000_000)return res.status(400).json({error:"Please record a shorter voice note."});
-  const match=audio.match(/^data:(audio\/(?:mp4|webm|ogg|wav|mpeg|mp3|m4a|aac|opus))(?:;[^,]*)?;base64,([\\s\\S]+)$/i);
+  const match=audio.match(/^data:(audio\/(?:mp4|webm|ogg|wav|mpeg|mp3|m4a|aac|opus))(?:;[^,]*)?;base64,([\s\S]+)$/i);
   if(!match)return res.status(400).json({error:"This audio format is not supported on this device."});
   const mode=d.mode==="nutrition"?"nutrition":"workout";
   const exercises=Array.isArray(d.exercises)?d.exercises.slice(0,30).map(e=>({name:String(e.name||"").slice(0,70),nextSet:Number(e.nextSet)||1})): [];
@@ -25,7 +25,7 @@ export default async function handler(req,res){
    "Next set: "+String(Number(d.nextSet)||1)
   ].join("\n");
   const input=[{type:"text",text:prompt},{type:"audio",data:match[2],mime_type:match[1]}];
-  const response=await fetch("https://generativelanguage.googleapis.com/v1beta/interactions",{method:"POST",headers:{"x-goog-api-key":apiKey,"Content-Type":"application/json","Api-Revision":"2026-05-20"},body:JSON.stringify({model:"gemini-3.5-flash-lite",input,store:false,response_mime_type:"application/json"})});
+  const response=await fetch("https://generativelanguage.googleapis.com/v1beta/interactions",{method:"POST",headers:{"x-goog-api-key":apiKey,"Content-Type":"application/json","Api-Revision":"2026-05-20"},body:JSON.stringify({model:"gemini-3.8-flash",input,store:false,response_format:{type:"text",mime_type:"application/json"}})});
   const payload=await response.json();
   if(!response.ok)return res.status(response.status===429?429:502).json({error:payload?.error?.message||"Could not understand that voice note."});
   if(payload.status&&payload.status!=="completed")throw new Error(payload.error?.message||"Voice processing did not complete.");
